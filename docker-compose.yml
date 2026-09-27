@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: founder-agents-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: founder_agents
+      POSTGRES_PASSWORD: founder_agents
+      POSTGRES_DB: founder_agents
+    ports:
+      - "5433:5432"
+    volumes:
+      - founder-agents-pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+volumes:
+  founder-agents-pgdata:
