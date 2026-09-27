@@ -59,3 +59,58 @@ values (1, '{
     "priorities": []
 }'::jsonb)
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Dashboard (ROADMAP phase 5) additions. Idempotent: safe to re-apply to an
+-- existing database with `docker exec -i founder-agents-postgres psql -U
+-- founder_agents -d founder_agents < db/schema.sql`.
+-- ---------------------------------------------------------------------------
+
+-- Design is the fourth team (DECISIONS.md D6); the original check predates it.
+-- Escalated = bounced twice, now with the founder (review_rubric).
+alter table work_orders drop constraint if exists work_orders_team_check;
+alter table work_orders add constraint work_orders_team_check
+    check (team in ('growth', 'technical', 'finance', 'design'));
+alter table work_orders drop constraint if exists work_orders_status_check;
+alter table work_orders add constraint work_orders_status_check
+    check (status in ('pending', 'in_progress', 'done', 'bounced', 'escalated'));
+
+-- A founder message sent to the Orchestrator from the dashboard.
+create table if not exists briefs (
+    id serial primary key,
+    body text not null,
+    status text not null default 'sent'
+        check (status in ('sent', 'answered', 'broken')),
+    response text,
+    error text,
+    created_at timestamptz not null default now(),
+    answered_at timestamptz
+);
+
+-- One line, in the founder's terms, of what the work order is for.
+alter table work_orders add column if not exists summary text;
+alter table work_orders add column if not exists brief_id integer references briefs(id);
+
+-- A draft's headline, its contradiction block (business_rules), and the
+-- founder's decision on it. Drafts are never deleted; decisions are recorded.
+alter table drafts add column if not exists summary text;
+alter table drafts add column if not exists contradiction jsonb;
+alter table drafts add column if not exists founder_decision text
+    check (founder_decision in ('approved', 'declined'));
+alter table drafts add column if not exists decision_note text;
+alter table drafts add column if not exists decided_at timestamptz;
+
+-- Every playbook edit made from the dashboard. A reason is required, the
+-- same rule company_brain applies to decisions.
+create table if not exists playbook_amendments (
+    id serial primary key,
+    skill_path text not null,
+    reason text not null check (length(trim(reason)) > 0),
+    before_text text not null,
+    after_text text not null,
+    created_at timestamptz not null default now()
+);
+
+-- A contradiction stays on the desk until the founder records a decision on
+-- it. Never auto-resolved.
+alter table drafts add column if not exists contradiction_resolved_at timestamptz;
