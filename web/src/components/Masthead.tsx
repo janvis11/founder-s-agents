@@ -12,17 +12,17 @@ export async function Masthead() {
       inFlight: orders.filter((w) => w.status === "pending" || w.status === "in_progress").length,
     };
   });
-  const name = state.ok ? (state.value.name ?? "Your company") : "Founder HQ";
+  const company = state.ok ? state.value.name : null;
 
   return (
     <header className="topbar">
-      <Link href="/" className="brand" aria-label={`${name} — home`}>
+      <Link href="/" className="brand" aria-label="Founders Corps home">
         <span className="brand-mark" aria-hidden>
-          {name.slice(0, 1).toUpperCase()}
+          FC
         </span>
         <span>
-          <span className="brand-name">{name}</span>
-          <span className="brand-sub">founder HQ · self-hosted</span>
+          <span className="brand-name">Founders Corps</span>
+          <span className="brand-sub">{company ? `${company} · self-hosted` : "self-hosted founder HQ"}</span>
         </span>
       </Link>
       <NavLinks />

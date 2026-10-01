@@ -53,7 +53,7 @@ export default async function Home() {
     <div className="stack">
       <Office {...office}>
         <div className="hero">
-          <div className="kicker">{company} · founder HQ · {stamp(new Date())}</div>
+          <div className="kicker">Founders Corps · {unset ? "new office" : company} · {stamp(new Date())}</div>
           <h1 className="display">
             {greeting()}, founder.
             <span className="accent">
