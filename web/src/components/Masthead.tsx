@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { attempt, getCompanyBrain, listLatestDrafts, listWorkOrders } from "@/lib/db";
-import { embedded } from "@/lib/sql";
 import { NavLinks } from "./NavLinks";
 
 export async function Masthead() {
@@ -13,7 +12,7 @@ export async function Masthead() {
       inFlight: orders.filter((w) => w.status === "pending" || w.status === "in_progress").length,
     };
   });
-  const name = state.ok ? (state.value.name ?? "Unnamed company") : "Founder HQ";
+  const name = state.ok ? (state.value.name ?? "Your company") : "Founder HQ";
 
   return (
     <header className="topbar">
@@ -23,7 +22,7 @@ export async function Masthead() {
         </span>
         <span>
           <span className="brand-name">{name}</span>
-          <span className="brand-sub">founder HQ{embedded ? " · demo database" : " · self-hosted"}</span>
+          <span className="brand-sub">founder HQ · self-hosted</span>
         </span>
       </Link>
       <NavLinks />

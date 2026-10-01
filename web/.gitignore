@@ -40,5 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Embedded demo database (npm run demo)
+# Local database (src/lib/sql.ts)
+/.data
 /.pglite-demo
