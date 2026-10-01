@@ -2455,3 +2455,16 @@ select.input option {
     top: 16px;
   }
 }
+
+.setup {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+
+.setup p {
+  font-size: 15.5px;
+  color: var(--dim);
+  max-width: 52ch;
+  margin: 0;
+}

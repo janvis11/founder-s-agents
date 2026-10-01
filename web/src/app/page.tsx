@@ -42,6 +42,8 @@ export default async function Home() {
   const [contradictions, orders, briefs, receipts, latest, allDrafts, brain] = state.value;
 
   const company = brain?.data.company?.name ?? "Your company";
+  // A fresh install: no company described yet, so no team has anything to read.
+  const unset = !brain?.data.company?.name && !brain?.data.product?.what_it_does;
   const runway = brain?.data.constraints?.runway_months ?? null;
   const office = buildOffice(orders, latest, allDrafts, contradictions, runway, company);
   const { waiting, held } = office.zones.founder;
@@ -58,10 +60,22 @@ export default async function Home() {
               {inFlight ? "Your teams are at their desks." : "The office is quiet. Brief it."}
             </span>
           </h1>
-          <p>
-            Every room is live. Desks light up when a team is working, drafts travel to your desk, and nothing leaves the
-            building without you. Click a room.
-          </p>
+          {unset ? (
+            <div className="setup">
+              <p>
+                Your teams have nothing to read yet. Describe the company first: what it is, what the product does, who
+                it is for. Every team reads this before it acts.
+              </p>
+              <Link href="/brain" className="btn">
+                Set up the company brain →
+              </Link>
+            </div>
+          ) : (
+            <p>
+              Every room is live. Desks light up when a team is working, drafts travel to your desk, and nothing leaves
+              the building without you. Click a room.
+            </p>
+          )}
         </div>
         <div className="stat-row">
           <Link href="/approvals" className="stat" data-tone={waiting ? "approve" : undefined}>
