@@ -66,8 +66,8 @@ export default async function Home() {
                 Your teams have nothing to read yet. Describe the company first: what it is, what the product does, who
                 it is for. Every team reads this before it acts.
               </p>
-              <Link href="/brain" className="btn">
-                Set up the company brain →
+              <Link href="/setup" className="btn">
+                Set up your office →
               </Link>
             </div>
           ) : (

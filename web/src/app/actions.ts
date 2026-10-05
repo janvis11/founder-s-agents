@@ -202,6 +202,25 @@ export async function addDecision(_prev: FormState, form: FormData): Promise<For
   return { ok: true };
 }
 
+/** First run: the few facts every team needs before any work order. */
+export async function setupCompany(_prev: FormState, form: FormData): Promise<FormState> {
+  const name = text(form, "name");
+  const whatItDoes = text(form, "what_it_does");
+  if (!name) return { error: "Give the company a name." };
+  if (!whatItDoes) return { error: "Say what the product does. No team claims more than this." };
+  const brain = await readBrain();
+  const next: CompanyBrain = {
+    ...brain,
+    company: { ...brain.company, name, one_liner: text(form, "one_liner") || null, stage: text(form, "stage") || "idea" },
+    product: { ...brain.product, what_it_does: whatItDoes },
+    icp: { ...brain.icp, who: text(form, "icp_who") || null },
+  };
+  await query("update company_brain set data = $1, updated_at = now() where id = 1", [JSON.stringify(next)]);
+  await receipt("company_brain", `Set up the company: ${name}`);
+  refreshAll();
+  redirect("/");
+}
+
 // Playbooks -------------------------------------------------------------------
 
 export async function amendPlaybook(_prev: FormState, form: FormData): Promise<FormState> {
