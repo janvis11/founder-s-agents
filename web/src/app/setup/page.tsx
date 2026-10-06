@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { attempt, getCompanyBrain } from "@/lib/db";
+import { readLock } from "@/lib/lock";
 import { Broken } from "@/components/Broken";
 import { SetupForm } from "@/components/SetupForm";
 
@@ -10,6 +11,7 @@ export default async function Setup() {
   const state = await attempt(getCompanyBrain);
   if (!state.ok) return <Broken reason={state.reason} />;
   const brain = state.value?.data ?? {};
+  const needsPasscode = !(await readLock());
 
   return (
     <>
@@ -25,6 +27,7 @@ export default async function Setup() {
         </div>
       </div>
       <SetupForm
+        needsPasscode={needsPasscode}
         defaults={{
           name: brain.company?.name,
           one_liner: brain.company?.one_liner,

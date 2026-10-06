@@ -13,7 +13,7 @@ function Submit() {
   );
 }
 
-export function SetupForm({ defaults }: { defaults: { name?: string | null; one_liner?: string | null; what_it_does?: string | null; icp_who?: string | null; stage?: string | null } }) {
+export function SetupForm({ defaults, needsPasscode }: { needsPasscode: boolean; defaults: { name?: string | null; one_liner?: string | null; what_it_does?: string | null; icp_who?: string | null; stage?: string | null } }) {
   const [state, action] = useActionState(setupCompany, null);
   return (
     <form action={action} className="sheet sheet-body" style={{ maxWidth: 720 }}>
@@ -58,6 +58,31 @@ export function SetupForm({ defaults }: { defaults: { name?: string | null; one_
           ))}
         </select>
       </div>
+      {needsPasscode && (
+        <fieldset style={{ border: 0, borderTop: "1px solid var(--line)", padding: "16px 0 0", margin: "6px 0 14px" }}>
+          <legend className="label" style={{ padding: "0 8px 0 0" }}>
+            Office passcode
+          </legend>
+          <p className="muted" style={{ margin: "0 0 12px", fontSize: 14 }}>
+            Locks the office so nobody else on this machine or network can approve, brief or edit. At least 6
+            characters.
+          </p>
+          <div className="pair" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0 14px" }}>
+            <div className="form-row">
+              <label className="label" htmlFor="setup-pass">
+                Passcode
+              </label>
+              <input id="setup-pass" name="passcode" type="password" className="input" required minLength={6} autoComplete="new-password" />
+            </div>
+            <div className="form-row">
+              <label className="label" htmlFor="setup-pass2">
+                Passcode again
+              </label>
+              <input id="setup-pass2" name="passcode_again" type="password" className="input" required minLength={6} autoComplete="new-password" />
+            </div>
+          </div>
+        </fieldset>
+      )}
       <Submit />
     </form>
   );
