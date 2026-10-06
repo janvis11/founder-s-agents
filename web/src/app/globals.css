@@ -2468,3 +2468,20 @@ select.input option {
   max-width: 52ch;
   margin: 0;
 }
+
+.unlock-wrap {
+  max-width: 560px;
+  margin: 6vh auto 0;
+}
+
+.unlock {
+  display: grid;
+}
+
+.lock-btn {
+  cursor: pointer;
+  background: transparent;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}

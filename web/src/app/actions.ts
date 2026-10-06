@@ -1,15 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { COOKIE_OPTIONS, SESSION_COOKIE, checkPasscode, readLock, sessionValid, setPasscode } from "@/lib/lock";
 import { query } from "@/lib/sql";
 import { sendToOrchestrator } from "@/lib/gateway";
 import { readPlaybook, writePlaybook } from "@/lib/playbooks";
 import type { CompanyBrain, Decision, Draft } from "@/lib/db";
 import { teamLabel } from "@/lib/teams";
 
-// The dashboard binds to 127.0.0.1 (package.json) — these actions are for
-// the founder at this machine. Every one writes a receipt.
+// The dashboard binds to 127.0.0.1 (package.json) and, once a passcode is
+// set, every action below checks the office lock itself: the proxy alone is
+// not enough (Next docs, Data Security). Every action writes a receipt.
 
 export type FormState = { ok?: boolean; error?: string; message?: string } | null;
 
@@ -33,9 +36,37 @@ function refreshAll() {
   revalidatePath("/", "layout");
 }
 
+/** Throws unless the caller holds this install's session (or no lock is set yet). */
+async function requireFounder() {
+  const jar = await cookies();
+  if (!(await sessionValid(jar.get(SESSION_COOKIE)?.value))) {
+    throw new Error("The office is locked. Unlock it with your passcode first.");
+  }
+}
+
+// Lock ------------------------------------------------------------------------
+
+export async function unlock(_prev: FormState, form: FormData): Promise<FormState> {
+  const token = await checkPasscode(String(form.get("passcode") ?? ""));
+  if (!token) {
+    // A small delay makes guessing slow without locking the founder out.
+    await new Promise((r) => setTimeout(r, 800));
+    return { error: "That passcode is not right." };
+  }
+  (await cookies()).set(SESSION_COOKIE, token, COOKIE_OPTIONS);
+  const next = String(form.get("next") ?? "/");
+  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/");
+}
+
+export async function lockOffice(): Promise<void> {
+  (await cookies()).delete(SESSION_COOKIE);
+  redirect("/unlock");
+}
+
 // Desk --------------------------------------------------------------------
 
 export async function sendBrief(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireFounder();
   const body = text(form, "body");
   if (!body) return { error: "Write the brief first." };
 
@@ -69,6 +100,7 @@ async function loadDraft(id: number): Promise<Draft | null> {
 }
 
 export async function approveDraft(form: FormData): Promise<void> {
+  await requireFounder();
   const draft = await loadDraft(Number(form.get("draft_id")));
   // The blocked tier is enforced here as well as hidden in the interface.
   if (!draft || draft.tier !== "approve" || draft.verdict !== "pass" || draft.founder_decision) {
@@ -81,6 +113,7 @@ export async function approveDraft(form: FormData): Promise<void> {
 }
 
 export async function declineDraft(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireFounder();
   const draft = await loadDraft(Number(form.get("draft_id")));
   const note = text(form, "note");
   if (!draft || draft.tier !== "approve" || draft.founder_decision) {
@@ -102,6 +135,7 @@ export async function declineDraft(_prev: FormState, form: FormData): Promise<Fo
 
 /** Blocked drafts are never executed here. This only records that the founder dealt with it elsewhere. */
 export async function markHandled(form: FormData): Promise<void> {
+  await requireFounder();
   const draft = await loadDraft(Number(form.get("draft_id")));
   if (!draft || draft.tier !== "blocked" || draft.decided_at) return;
   await query("update drafts set decided_at = now(), decision_note = 'Handled outside the system' where id = $1", [
@@ -132,6 +166,7 @@ function decisionFrom(form: FormData): Decision | string {
 }
 
 export async function resolveContradiction(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireFounder();
   const id = Number(form.get("draft_id"));
   const decision = decisionFrom(form);
   if (typeof decision === "string") return { error: decision };
@@ -161,6 +196,7 @@ function num(form: FormData, key: string): number | null {
 }
 
 export async function saveBrain(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireFounder();
   const brain = await readBrain();
   const orNull = (key: string) => text(form, key) || null;
   const next: CompanyBrain = {
@@ -192,6 +228,7 @@ export async function saveBrain(_prev: FormState, form: FormData): Promise<FormS
 }
 
 export async function addDecision(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireFounder();
   const decision = decisionFrom(form);
   if (typeof decision === "string") return { error: decision };
   const brain = await readBrain();
@@ -204,6 +241,13 @@ export async function addDecision(_prev: FormState, form: FormData): Promise<For
 
 /** First run: the few facts every team needs before any work order. */
 export async function setupCompany(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireFounder();
+  const firstRun = !(await readLock());
+  const passcode = String(form.get("passcode") ?? "");
+  if (firstRun) {
+    if (passcode.length < 6) return { error: "Choose a passcode of at least 6 characters. It locks the office." };
+    if (passcode !== String(form.get("passcode_again") ?? "")) return { error: "The two passcodes do not match." };
+  }
   const name = text(form, "name");
   const whatItDoes = text(form, "what_it_does");
   if (!name) return { error: "Give the company a name." };
@@ -217,6 +261,11 @@ export async function setupCompany(_prev: FormState, form: FormData): Promise<Fo
   };
   await query("update company_brain set data = $1, updated_at = now() where id = 1", [JSON.stringify(next)]);
   await receipt("company_brain", `Set up the company: ${name}`);
+  if (firstRun) {
+    const token = await setPasscode(passcode);
+    (await cookies()).set(SESSION_COOKIE, token, COOKIE_OPTIONS);
+    await receipt("lock", "Set the office passcode");
+  }
   refreshAll();
   redirect("/");
 }
@@ -224,6 +273,7 @@ export async function setupCompany(_prev: FormState, form: FormData): Promise<Fo
 // Playbooks -------------------------------------------------------------------
 
 export async function amendPlaybook(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireFounder();
   const slug = text(form, "slug");
   const reason = text(form, "reason");
   const after = String(form.get("text") ?? "").replace(/\r\n/g, "\n");

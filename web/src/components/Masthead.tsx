@@ -1,8 +1,29 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { lockOffice } from "@/app/actions";
 import { attempt, getCompanyBrain, listLatestDrafts, listWorkOrders } from "@/lib/db";
+import { SESSION_COOKIE, readLock, sessionValid } from "@/lib/lock";
 import { NavLinks } from "./NavLinks";
 
 export async function Masthead() {
+  const locked = !(await sessionValid((await cookies()).get(SESSION_COOKIE)?.value));
+  if (locked) {
+    // Behind the lock, show nothing about the company.
+    return (
+      <header className="topbar">
+        <span className="brand">
+          <span className="brand-mark" aria-hidden>
+            FC
+          </span>
+          <span>
+            <span className="brand-name">Founders Corps</span>
+            <span className="brand-sub">locked</span>
+          </span>
+        </span>
+      </header>
+    );
+  }
+  const hasLock = Boolean(await readLock());
   const state = await attempt(async () => {
     const [brain, drafts, orders] = await Promise.all([getCompanyBrain(), listLatestDrafts(), listWorkOrders()]);
     return {
@@ -43,6 +64,13 @@ export async function Masthead() {
           <span className="pill" data-tone="blocked">
             <span className="dot" /> no database
           </span>
+        )}
+        {hasLock && (
+          <form action={lockOffice}>
+            <button type="submit" className="pill lock-btn">
+              Lock
+            </button>
+          </form>
         )}
       </div>
     </header>
