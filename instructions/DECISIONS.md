@@ -102,3 +102,24 @@ Growth communicating it.
 need no more than a paragraph a founder could get from Technical or Growth
 directly — i.e., the discipline does not carry enough distinct judgment to
 justify its own instance and skill folder.
+
+---
+
+## D7: One install per founder. No shared, multi-company hosting.
+
+**Decision.** Each founder runs their own copy of Founders Corps, with its
+own database and its own `skills/` folder. One install holds exactly one
+company: `company_brain` stays a single row. A second founder gets a second
+install, not an account on the first one.
+
+**Reasoning.** The product leads on data staying on the founder's machine
+and on a playbook the founder can take away as a folder (D5). Hosting many
+companies in one install means accounts, logins, a company column on every
+table and a filter on every query, and one missed filter leaks one
+founder's data to another. That is a large build that spends the
+differentiator. ROADMAP already defers multi-tenant hosting.
+
+**Revisit if.** Founders ask to run more than one company themselves, in
+which case add a company switcher for a single owner first; or the product
+moves to a hosted offering, in which case multi-tenancy needs its own
+decision and its own security review.
