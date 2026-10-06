@@ -6,7 +6,7 @@ import { GROUP_ORDER, listPlaybooks } from "@/lib/playbooks";
 import { TEAM_ROLE, instancesUsing, teamLabel } from "@/lib/teams";
 import { ZONE_COLOR, type ZoneKey } from "@/components/office/zones";
 
-export const metadata: Metadata = { title: "Playbooks — founder-agents" };
+export const metadata: Metadata = { title: "Playbooks · Founders Corps" };
 
 export default async function Playbooks() {
   const playbooks = await listPlaybooks();

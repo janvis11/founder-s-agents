@@ -11,7 +11,7 @@ import { DiffView } from "@/components/DiffView";
 
 export async function generateMetadata(props: PageProps<"/playbooks/[...slug]">) {
   const { slug } = await props.params;
-  return { title: `${slug.join("/")} — Playbooks` };
+  return { title: `${slug.join("/")} · Playbooks · Founders Corps` };
 }
 
 function sectionClass(heading: string | null) {

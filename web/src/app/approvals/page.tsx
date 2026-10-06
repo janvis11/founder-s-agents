@@ -9,7 +9,7 @@ import { Bounces } from "@/components/Bounces";
 import { DraftContent } from "@/components/DraftContent";
 import { ApproveActions, HeldActions } from "@/components/forms";
 
-export const metadata: Metadata = { title: "Approvals — founder-agents" };
+export const metadata: Metadata = { title: "Approvals · Founders Corps" };
 
 export default async function Approvals() {
   const state = await attempt(() => Promise.all([listLatestDrafts(), listBouncesByWorkOrder()]));

@@ -4,7 +4,7 @@ import { stamp } from "@/lib/format";
 import { Broken } from "@/components/Broken";
 import { BrainForm, DecisionForm } from "@/components/forms";
 
-export const metadata: Metadata = { title: "Company brain — founder-agents" };
+export const metadata: Metadata = { title: "Company brain · Founders Corps" };
 
 export default async function Brain() {
   const state = await attempt(getCompanyBrain);

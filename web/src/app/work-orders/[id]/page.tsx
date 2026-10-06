@@ -13,7 +13,7 @@ import { Wire } from "@/components/Wire";
 
 export async function generateMetadata(props: PageProps<"/work-orders/[id]">) {
   const { id } = await props.params;
-  return { title: `${id} — founder-agents` };
+  return { title: `${id} · Founders Corps` };
 }
 
 function playbookSlug(team: string, skill: string) {
