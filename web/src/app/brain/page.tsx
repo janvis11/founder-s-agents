@@ -24,11 +24,16 @@ export default async function Brain() {
             you instead of letting a team guess.
           </p>
         </div>
-        {state.value && (
-          <span className="mono muted" style={{ fontSize: 12.5 }}>
-            updated {stamp(state.value.updated_at)}
-          </span>
-        )}
+        <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
+          {state.value && (
+            <span className="mono muted" style={{ fontSize: 12.5 }}>
+              updated {stamp(state.value.updated_at)}
+            </span>
+          )}
+          <a href="/export" className="btn btn-quiet" download>
+            Download a backup
+          </a>
+        </div>
       </div>
 
       <div className="brain">
