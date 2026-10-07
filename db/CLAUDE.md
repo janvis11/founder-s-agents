@@ -13,7 +13,10 @@
 - Decisions in `company_brain.data.decisions` must carry `reasoning` and
   `revisit_if`; the dashboard and `harness/mcp_server.py` both reject
   decisions without them.
-- Where the data lives: `web/.data/companies/<slug>/postgres`, one folder
+- The accounts database is separate: `web/.data/install/postgres`
+  (accounts, sessions, memberships), schema inside `web/src/lib/accounts.ts`,
+  opened only by the dashboard process and never served on a port.
+- Where company data lives: `web/.data/companies/<id>/postgres`, one folder
   per company, listed with its port in `web/.data/companies.json`. The
   dashboard serves each on its port while it runs (legro on 5434). Docker
   Postgres on port 5433 is the alternative (`FOUNDER_AGENTS_DB=postgres`),

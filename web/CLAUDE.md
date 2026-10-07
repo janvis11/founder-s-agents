@@ -7,27 +7,33 @@ is plain CSS in `src/app/globals.css`.
 
 ## Layout
 
-- `src/app/` pages: `/` lobby, `/new` create a company, `/enter/[slug]`
-  passcode, `/office` office home, `/approvals`, `/work-orders/[id]`,
+- `src/app/` pages: `/` front desk (signed out) or your offices (signed
+  in), `/signup` build your office, `/new` open another office, `/claim`
+  claim an office from before accounts, `/c/[id]` route handler that steps
+  into one of your companies, `/office` office home, `/approvals`, `/work-orders/[id]`,
   `/playbooks` and `/playbooks/[...slug]` (read and amend), `/ledger`
   (receipts), `/brain`, `/setup` (company essentials), `/export` (JSON
   backup route). `actions.ts` holds every server action.
 - `src/components/office/` the isometric office: `iso.ts` projection
   helpers, `zones.ts` room colours (shared by server and client),
   `Office.tsx` the SVG scene, room labels and the slide-in room drawer.
-- `src/lib/`: `companies.ts` registry (`web/.data/companies.json`), one
-  folder per company, one-time move of the old single-company layout;
-  `sql.ts` one database per company (`query` uses the current company,
-  `queryFor(slug)` an explicit one); `db.ts` typed queries; `lock.ts`
-  passcode and session per company; `office.ts` maps work orders onto rooms,
+- `src/lib/`: `accounts.ts` the install's accounts database (accounts,
+  sessions, memberships; `currentAccount()`); `session.ts` signed session
+  cookie, header names, `sameHost()` for redirects; `companies.ts`
+  registry (`web/.data/companies.json`), random company ids;
+  `sql.ts` one database per company (`query` uses `currentCompany()`, which
+  checks membership; `queryFor(id)` an explicit one); `db.ts` typed
+  queries; `lock.ts` old passcodes, used only to claim; `office.ts` maps work orders onto rooms,
   `playbooks.ts` reads and writes `../skills`, `gateway.ts` calls the
   Orchestrator, `teams.ts`, `workOrders.ts`, `format.ts`, `diff.ts`,
   `markdown.ts`, `rubric.ts`.
-- `src/proxy.ts` (Next 16 name for middleware): `/`, `/new` and
-  `/enter/*` are open; every other path needs the session of the company in
-  the `fc_company` cookie, else it redirects to the lobby. It is the only
-  place the `x-fc-company` request header is set (and it strips any client
-  copy); `sql.ts` reads the current company from that header.
+- `src/proxy.ts` (Next 16 name for middleware): `/` and `/signup` are
+  open; `/new`, `/claim`, `/c/*` need a valid signed session; everything
+  else also needs the `fc_company` cookie. It only checks the cookie
+  signature (no database), and is the only place the `x-fc-account`,
+  `x-fc-session` and `x-fc-company` headers are set (client copies are
+  stripped). The server checks the session is live and the founder is a
+  member before any company data is read.
 - `src/instrumentation.ts` opens every company's database at server start
   so each is served on its port for the agents straight away.
 - `scripts/dev.mjs` is `npm run dev`: starts `next dev` on 127.0.0.1. The
@@ -37,9 +43,12 @@ is plain CSS in `src/app/globals.css`.
 ## Rules that matter
 
 - Every server action inside a company calls `requireFounder()` first; it
-  returns the company slug. The proxy alone is not enough (Next docs, Data
-  Security). Lobby actions (`enterCompany`, `createCompany`) run outside a
-  company and use `queryFor(slug)`.
+  returns the company id only when the signed-in founder is a member. The
+  proxy alone is not enough (Next docs, Data Security). Account actions
+  (`signUp`, `signIn`, `createCompany`, `claimCompany`) use `queryFor(id)`.
+- Isolation (D9): never list, count or name another founder's company;
+  "not yours" and "does not exist" must look identical; company ids are
+  random, never derived from names.
 - Every founder action writes a receipt (`agent_run_logs`, agent
   `founder`).
 - Blocked tier is enforced server side too, not just hidden in the UI.
@@ -56,6 +65,14 @@ is plain CSS in `src/app/globals.css`.
   file; shared constants go in a plain module (that is why `zones.ts`
   exists).
 - New routes need `npx next typegen` before `tsc` knows `PageProps<"/x">`.
+- The root layout (header) does not re-render on client navigation: after
+  sign in or sign up use a full page load (`window.location.assign`), and
+  call `revalidatePath("/", "layout")` before redirects in actions.
+- In dev `request.url` can say `localhost` while the browser is on
+  127.0.0.1, so redirects lose the session cookie. Build redirect URLs with
+  `sameHost(request, path)`.
+- `tsc` with the dev server running can fail on half-written files in
+  `.next/dev/types`; stop the server or delete that folder first.
 - After big edits the dev server can serve stale server HTML (hydration
   mismatch on colours). Restart it and delete `.next/dev` if so.
 - `npx tsc --noEmit` takes minutes on this machine; run in background.

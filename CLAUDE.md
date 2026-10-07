@@ -15,8 +15,10 @@ A self-hosted office for founders: four teams (Growth, Technical, Finance,
 Design), each a Hermes agent, plus an Orchestrator the founder briefs and a
 Reviewer that checks every draft against fixed rules. The dashboard (`web/`)
 shows the office as an isometric miniature with a room per team. Product
-name in the UI: **Founders Corps**. One install holds many companies (D8):
-`/` is a lobby, each company has its own database and passcode.
+name in the UI: **Founders Corps**. One install serves many founders (D8,
+D9): each founder has an account (email and password) and sees only their
+own companies; every other company is invisible. Each company has its own
+database.
 
 Product intent, architecture and rules live in `instructions/`
 (PRODUCT, AGENTS, ROADMAP, DECISIONS, GLOSSARY, EVALS, SKILL_AUTHORING) and
@@ -70,20 +72,24 @@ machine right now.
 
 `instructions/PROGRESS.md` holds the current state by area. Short version:
 
-- Dashboard: built (lobby, create and enter a company, office at
-  `/office`, approvals, work orders, playbooks with amendments, receipts,
-  company brain, company essentials, per-company passcode lock, backup
-  export).
+- Dashboard: built (sign in "arrive at the building", sign up "build your
+  office" with the founder's charter, your offices, open another office,
+  claim an office from before accounts, office at `/office`, approvals,
+  work orders, playbooks with amendments, receipts, company brain, company
+  essentials, backup export).
 - Database: one per company, served on its own port; root `.env`
   `DATABASE_URL` points at legro's (5434), so the MCP server serves legro.
-- Live data: company **legro** set up by Janvi on 2026-10-07, passcode set,
-  one brief sent (status broken because no agent is running). It lives in
-  `web/.data/companies/legro/`.
+- Live data: company **legro** (from before accounts, unclaimed: claim it
+  at `/claim` with its name and old passcode); company **acel** created
+  through sign up on 2026-10-07, not by Claude. Test accounts
+  `founder-a@test.local` and `founder-b@test.local` with their two "Acme"
+  companies are still in the data; remove them on the next server restart
+  (see PROGRESS.md).
 - Agents: NOT running. AWS Bedrock keys are not in `.env` yet; Janvi will
   provide them later. Skip anything that needs a live model until then.
 
 ## Pending decisions
 
-- None open. Many companies per install was approved and built (D8). Its
-  last two parts are still to do: per-company playbook edits, and the MCP
-  server choosing the right company per work order (see PROGRESS.md).
+- None open. Accounts were approved and built (D9). Still to do for many
+  companies: per-company playbook edits, and the MCP server choosing the
+  right company per work order (see PROGRESS.md).

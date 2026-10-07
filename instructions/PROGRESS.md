@@ -12,7 +12,7 @@ statements. Last updated 2026-10-07.
   technical/scope_mvp, finance/runway_tracker,
   design/product_design_direction, design/brand_identity.
 - Product docs in `instructions/` (PRODUCT, AGENTS, ROADMAP, DECISIONS
-  D1 to D8, GLOSSARY, EVALS, SKILL_AUTHORING, CLAUDE). Dashboard design
+  D1 to D9, GLOSSARY, EVALS, SKILL_AUTHORING, CLAUDE). Dashboard design
   guidance in `meta/`.
 
 ## Agents (Hermes)
@@ -35,27 +35,44 @@ statements. Last updated 2026-10-07.
 - Docker Postgres (port 5433) is the optional alternative
   (`FOUNDER_AGENTS_DB=postgres`). Docker Desktop does not work on Janvi's
   machine.
-- Live data: company **legro** (finance company, stage launched, product
-  "growing and managing ledgers", customer "business"), set up 2026-10-07,
-  passcode set, one brief sent (status broken: no Orchestrator running).
-  Runway, burn, hours per week, priorities and decisions are still empty.
-  It was moved into `web/.data/companies/legro/` with all its data; a copy
-  of the old layout was kept in the temp folder (`fc-data-backup-*`).
+- Accounts database (D9): `web/.data/install/postgres`, opened in-process
+  only, never served on a port. Tables: accounts (email, name, scrypt
+  password hash), sessions (stored hashed, revoked on sign out),
+  memberships (which account owns which company). Session cookies are
+  signed with `web/.data/install/secret.key`.
+- Live data:
+  - **legro** (finance company, stage launched, product "growing and
+    managing ledgers", customer "business"), set up 2026-10-07 before
+    accounts, one brief sent (broken: no Orchestrator). Unclaimed: Janvi
+    claims it at `/claim` with the name and its old passcode. Runway, burn,
+    hours per week, priorities and decisions are still empty. A copy of the
+    pre-move layout is in the temp folder (`fc-data-backup-*`).
+  - **acel**, created through sign up on 2026-10-07 (not by Claude).
+  - Test data to remove on the next restart (stop the server first): the
+    accounts `founder-a@test.local` and `founder-b@test.local`, their
+    companies `uy7vwjfragpo` and `zsp423u90ef3` ("Acme"), those folders and
+    their entries in `web/.data/companies.json`.
 
 ## Dashboard (`web/`)
 
-- Pages: lobby `/` (all companies, Enter, Create a new company), `/new`
-  (create a company with its passcode), `/enter/<slug>` (passcode), office
-  `/office`, approvals, work order, playbooks (read and amend with diff plus
-  required reason, amendment register), receipts, company brain
-  (append-only decisions), company essentials `/setup`, backup export.
-- Per-company lock: scrypt hash in `web/.data/companies/<slug>/lock.json`,
-  a session cookie per company plus a cookie naming the company you
-  entered. `src/proxy.ts` sends you to the lobby unless that company's
-  session is valid, and is the only place the company header is set; every
-  server action re-checks. Header has Back to lobby and Lock. Forgot a
-  passcode: delete that company's `lock.json`; the next person to enter it
-  sets a new one.
+- Pages: `/` is the front desk when signed out ("Who's arriving?", one
+  question at a time; the office lights come on) and "Your offices" when
+  signed in (only this founder's companies); `/signup` builds the office
+  live as the founder answers and ends with the founder's charter (three
+  lines, recorded as the company's first receipt); `/new` opens another
+  office; `/claim` claims an office from before accounts; `/c/<id>` steps
+  into one of your companies; office `/office`, approvals, work order,
+  playbooks (read and amend with diff plus required reason, amendment
+  register), receipts, company brain (append-only decisions), company
+  essentials `/setup`, backup export.
+- Isolation (D9): a founder sees only their own companies. Other companies
+  are invisible: no shared list, random company ids, and opening a company
+  you do not own gives the same result as one that does not exist (tested
+  with two founders who both named their company "Acme"). `src/proxy.ts`
+  checks the signed session cookie and is the only place the account,
+  session and company headers are set; the server then checks the session
+  is live and the founder is a member (`currentCompany()` in `sql.ts`).
+  Header shows the founder's name, Your offices and Sign out.
 - Backup: "Download a backup" on the Brain page, all tables plus playbooks
   as one JSON file.
 - Product name in the UI: **Founders Corps**. The dashboard starts empty;
@@ -69,8 +86,9 @@ statements. Last updated 2026-10-07.
 
 ## Decisions in force
 
-- D8: many companies per install, one database and passcode each.
-  Supersedes D7.
+- D8: many companies per install, one database each. Supersedes D7.
+- D9: founder accounts; a founder sees only their own companies. Company
+  passcodes retired except to claim an office from before accounts.
 
 ## Not committed on purpose
 
@@ -84,16 +102,16 @@ statements. Last updated 2026-10-07.
 2. When AWS keys arrive: `python scripts/configure_instances.py`,
    `python scripts/sync_skills.py`, then start each gateway
    (`orchestrator gateway run`, then growth, technical, finance, design).
-3. Code without a live model, in this order: finish many companies
+3. Remove the test accounts and companies (see Database).
+4. Code without a live model, in this order: finish many companies
    (per-company playbook edits, MCP server company routing), eval harness
    (ROADMAP phase 2), prompts for empty company brain fields.
-4. Code with a live model: the automatic loop (ROADMAP phase 1).
+5. Code with a live model: the automatic loop (ROADMAP phase 1).
 
-## Many companies per install (D8): what is left
+## Many companies and accounts (D8, D9): what is left
 
-Built: lobby, create and enter a company, a database and passcode per
-company, office at `/office`, Back to lobby, legro moved into its own
-folder, every company's database served for the agents.
+Built: accounts, sign in and sign up, your offices, a database per company
+served for the agents, isolation between founders, claim for legro.
 
 Still to do:
 - Per-company playbook edits: `skills/` stays the shared default; a
@@ -103,4 +121,6 @@ Still to do:
   `harness/mcp_server.py` opens that company's database (its port is in
   `web/.data/companies.json`). Today the MCP server only reaches the company
   in `.env` `DATABASE_URL` (legro).
-- Out of scope: public internet hosting (needs accounts, HTTPS, hosting).
+- Possibly later: invite a co-founder's account into a company.
+- Out of scope: public internet hosting (needs HTTPS, email verification,
+  edge rate limiting and a security review).
