@@ -144,3 +144,29 @@ folder. Hosting on the public internet is still out of scope.
 **Revisit if.** The product is hosted publicly for strangers (then it needs
 real accounts, HTTPS and a security review), or the number of companies per
 install makes one database server per company too heavy to run.
+
+---
+
+## D9: Founder accounts. A founder sees only their own companies.
+
+**Decision.** Founders sign up and sign in with email and password. Each
+company belongs to the account that created it. A signed-in founder sees
+only their own companies; nothing about any other company is visible: no
+shared lobby, no names, no counts, and an address for a company they do not
+own gives the same "nothing here" page as one that does not exist.
+Companies get random internal ids, never derived from their names. Company
+passcodes are retired; a company from before accounts is claimed once with
+its old passcode. Sign in is "Arrive at the building" (the office lights
+come on); sign up builds the founder's office live and ends with the
+founder's charter, recorded as the company's first receipt.
+
+**Reasoning.** Janvi wants one install to serve many founders, each with
+their own dedicated office, and the existence of other companies must stay
+invisible (D8 listed every company in a lobby). Passwords are stored only as
+salted scrypt hashes; sessions are random tokens checked on the server.
+Email and password work offline on a self-hosted machine, unlike sign-in
+through an outside provider.
+
+**Revisit if.** The install is put on the public internet (needs HTTPS,
+rate limiting at the edge, email verification and a security review), or
+founders ask to share a company with a co-founder (add invitations).
