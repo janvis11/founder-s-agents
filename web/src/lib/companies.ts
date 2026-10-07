@@ -1,9 +1,12 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { randomBytes } from "node:crypto";
 
-// The companies on this install (D8). Each has its own folder under
-// web/.data/companies/<slug>/ holding its database and its passcode, so no
-// two companies share a table. The registry file lists names and ports only.
+// The companies on this install (D8, D9). Each has its own folder under
+// web/.data/companies/<id>/ holding its database, so no two companies share
+// a table. The registry file (names and ports) is read only on the server
+// and never sent to a browser: who may see a company is decided by
+// memberships in the accounts database (lib/accounts.ts).
 
 export const DATA_DIR = path.join(process.cwd(), ".data");
 const REGISTRY = path.join(DATA_DIR, "companies.json");
@@ -93,19 +96,28 @@ export async function getCompany(slug: string): Promise<Company | null> {
   return (await listCompanies()).find((c) => c.slug === slug) ?? null;
 }
 
+/**
+ * A new company gets a random id, never one derived from its name (D9): two
+ * founders can both call their company "Acme" and neither can learn the
+ * other exists.
+ */
 export async function addCompany(name: string): Promise<Company> {
   const list = await listCompanies();
-  const base = slugify(name);
-  let slug = base;
-  for (let n = 2; list.some((c) => c.slug === slug); n++) slug = `${base}-${n}`.slice(0, 40);
+  let id = randomId();
+  while (list.some((c) => c.slug === id)) id = randomId();
   const port = list.reduce((max, c) => Math.max(max, c.port), FIRST_PORT - 1) + 1;
-  const company: Company = { slug, name, port, created_at: new Date().toISOString() };
-  await fs.mkdir(companyDir(slug), { recursive: true });
+  const company: Company = { slug: id, name, port, created_at: new Date().toISOString() };
+  await fs.mkdir(companyDir(id), { recursive: true });
   await writeRegistry([...list, company]);
   return company;
 }
 
-/** Keep the lobby's name in step with the company brain. */
+function randomId(): string {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from(randomBytes(12), (b) => alphabet[b % alphabet.length]).join("");
+}
+
+/** Keep the registry's name in step with the company brain. */
 export async function renameCompany(slug: string, name: string): Promise<void> {
   const list = await listCompanies();
   await writeRegistry(list.map((c) => (c.slug === slug ? { ...c, name } : c)));
