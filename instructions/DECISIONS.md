@@ -126,7 +126,7 @@ decision and its own security review.
 
 ---
 
-## D8: Many companies per install. Supersedes D7.
+## D8: Many companies per install. Supersedes D7. Lobby and company passcodes superseded by D9.
 
 **Decision.** One install can hold many companies. `/` is a lobby listing
 them; each company has its own passcode and its own database folder
