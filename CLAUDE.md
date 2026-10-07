@@ -11,11 +11,12 @@ always agree with each other and with the code.
 
 ## What it is
 
-A self-hosted office for a solo founder: four teams (Growth, Technical,
-Finance, Design), each a Hermes agent, plus an Orchestrator the founder
-briefs and a Reviewer that checks every draft against fixed rules. The
-dashboard (`web/`) shows the office as an isometric miniature with a room
-per team. Product name in the UI: **Founders Corps**.
+A self-hosted office for founders: four teams (Growth, Technical, Finance,
+Design), each a Hermes agent, plus an Orchestrator the founder briefs and a
+Reviewer that checks every draft against fixed rules. The dashboard (`web/`)
+shows the office as an isometric miniature with a room per team. Product
+name in the UI: **Founders Corps**. One install holds many companies (D8):
+`/` is a lobby, each company has its own database and passcode.
 
 Product intent, architecture and rules live in `instructions/`
 (PRODUCT, AGENTS, ROADMAP, DECISIONS, GLOSSARY, EVALS, SKILL_AUTHORING) and
@@ -41,10 +42,12 @@ cd web
 npm run dev
 ```
 
-Starts the local database server on 127.0.0.1:5434 (files in
-`web/.data/postgres`) and the dashboard on http://127.0.0.1:3000 (use
-127.0.0.1, not localhost, on this Windows machine). Docker is not needed;
-Docker Desktop does not work on Janvi's machine right now.
+Starts the dashboard on http://127.0.0.1:3000 (use 127.0.0.1, not
+localhost, on this Windows machine). It opens every company's database
+(`web/.data/companies/<slug>/postgres`) and serves each on its own port for
+the agents (listed in `web/.data/companies.json`; the first company, legro,
+is on 5434). Docker is not needed; Docker Desktop does not work on Janvi's
+machine right now.
 
 ## How Janvi wants work done
 
@@ -59,24 +62,28 @@ Docker Desktop does not work on Janvi's machine right now.
 - Keep changes small when asked for "something small".
 - Explain plans in simple terms before big changes; she validates first.
 - Keep these notes current by editing them in place (see top of file).
+- Before each commit, check `git status` shows nothing else staged:
+  earlier `git mv` / `git rm` stay staged and get swept into the next
+  commit otherwise.
 
 ## Status (update every session)
 
 `instructions/PROGRESS.md` holds the current state by area. Short version:
 
-- Dashboard: built (office, approvals, work orders, playbooks with
-  amendments, receipts, company brain, setup, passcode lock, backup export).
-- Database: local shared database via `npm run dev`; root `.env`
-  `DATABASE_URL` points at it so the MCP server shares it.
+- Dashboard: built (lobby, create and enter a company, office at
+  `/office`, approvals, work orders, playbooks with amendments, receipts,
+  company brain, company essentials, per-company passcode lock, backup
+  export).
+- Database: one per company, served on its own port; root `.env`
+  `DATABASE_URL` points at legro's (5434), so the MCP server serves legro.
 - Live data: company **legro** set up by Janvi on 2026-10-07, passcode set,
-  one brief sent (status broken because no agent is running).
+  one brief sent (status broken because no agent is running). It lives in
+  `web/.data/companies/legro/`.
 - Agents: NOT running. AWS Bedrock keys are not in `.env` yet; Janvi will
   provide them later. Skip anything that needs a live model until then.
 
 ## Pending decisions
 
-- **Many companies per install** (lobby page, per-company database,
-  passcode and playbook edits, agents told which company each work order is
-  for). Plan written in `instructions/PROGRESS.md`, awaiting Janvi's
-  validation. It would supersede decision D7 with a new D8. Do not build it
-  before she says yes.
+- None open. Many companies per install was approved and built (D8). Its
+  last two parts are still to do: per-company playbook edits, and the MCP
+  server choosing the right company per work order (see PROGRESS.md).

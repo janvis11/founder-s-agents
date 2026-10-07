@@ -12,7 +12,7 @@ statements. Last updated 2026-10-07.
   technical/scope_mvp, finance/runway_tracker,
   design/product_design_direction, design/brand_identity.
 - Product docs in `instructions/` (PRODUCT, AGENTS, ROADMAP, DECISIONS
-  D1 to D7, GLOSSARY, EVALS, SKILL_AUTHORING, CLAUDE). Dashboard design
+  D1 to D8, GLOSSARY, EVALS, SKILL_AUTHORING, CLAUDE). Dashboard design
   guidance in `meta/`.
 
 ## Agents (Hermes)
@@ -26,9 +26,12 @@ statements. Last updated 2026-10-07.
 ## Database
 
 - One schema file, `db/schema.sql`, idempotent, applied on every start.
-- Data lives in `web/.data/postgres`. `npm run dev` serves it on
-  127.0.0.1:5434 so the dashboard and the MCP server share it; root `.env`
-  `DATABASE_URL` points there. Verified from Python (psycopg).
+- One database per company in `web/.data/companies/<slug>/postgres`,
+  listed in `web/.data/companies.json` (names and ports only). The dashboard
+  opens every company's database when it starts and serves each on its own
+  port (legro on 5434, new companies on the next free port) so the agents'
+  MCP server can reach it. Root `.env` `DATABASE_URL` points at legro.
+  Verified from Python (psycopg) after a restart.
 - Docker Postgres (port 5433) is the optional alternative
   (`FOUNDER_AGENTS_DB=postgres`). Docker Desktop does not work on Janvi's
   machine.
@@ -36,16 +39,23 @@ statements. Last updated 2026-10-07.
   "growing and managing ledgers", customer "business"), set up 2026-10-07,
   passcode set, one brief sent (status broken: no Orchestrator running).
   Runway, burn, hours per week, priorities and decisions are still empty.
+  It was moved into `web/.data/companies/legro/` with all its data; a copy
+  of the old layout was kept in the temp folder (`fc-data-backup-*`).
 
 ## Dashboard (`web/`)
 
-- Pages: office home, approvals, work order, playbooks (read and amend with
-  diff plus required reason, amendment register), receipts, company brain
-  (append-only decisions), first-run setup, unlock, backup export.
-- Office passcode lock: scrypt hash in `web/.data/lock.json`, session
-  cookie, `src/proxy.ts` guards every page, every server action re-checks,
-  header hides company data while locked, Lock button. Forgot passcode:
-  delete `web/.data/lock.json` and set a new one at `/setup`.
+- Pages: lobby `/` (all companies, Enter, Create a new company), `/new`
+  (create a company with its passcode), `/enter/<slug>` (passcode), office
+  `/office`, approvals, work order, playbooks (read and amend with diff plus
+  required reason, amendment register), receipts, company brain
+  (append-only decisions), company essentials `/setup`, backup export.
+- Per-company lock: scrypt hash in `web/.data/companies/<slug>/lock.json`,
+  a session cookie per company plus a cookie naming the company you
+  entered. `src/proxy.ts` sends you to the lobby unless that company's
+  session is valid, and is the only place the company header is set; every
+  server action re-checks. Header has Back to lobby and Lock. Forgot a
+  passcode: delete that company's `lock.json`; the next person to enter it
+  sets a new one.
 - Backup: "Download a backup" on the Brain page, all tables plus playbooks
   as one JSON file.
 - Product name in the UI: **Founders Corps**. The dashboard starts empty;
@@ -59,8 +69,8 @@ statements. Last updated 2026-10-07.
 
 ## Decisions in force
 
-- D7: one install per founder, one company per install. A plan to replace
-  it with many companies per install is awaiting validation (below).
+- D8: many companies per install, one database and passcode each.
+  Supersedes D7.
 
 ## Not committed on purpose
 
@@ -74,24 +84,23 @@ statements. Last updated 2026-10-07.
 2. When AWS keys arrive: `python scripts/configure_instances.py`,
    `python scripts/sync_skills.py`, then start each gateway
    (`orchestrator gateway run`, then growth, technical, finance, design).
-3. Code without a live model, options offered to Janvi: many companies per
-   install (after validation), eval harness (ROADMAP phase 2), prompts for
-   empty company brain fields.
+3. Code without a live model, in this order: finish many companies
+   (per-company playbook edits, MCP server company routing), eval harness
+   (ROADMAP phase 2), prompts for empty company brain fields.
 4. Code with a live model: the automatic loop (ROADMAP phase 1).
 
-## Plan awaiting validation: many companies per install
+## Many companies per install (D8): what is left
 
-- `/` becomes a lobby listing companies, each with Enter, plus Create a
-  new company. Each company has its own passcode.
-- One database per company: `.data/companies/<slug>/`. Physically separate,
-  so one company can never read another's data; backup or delete is one
-  folder. A small registry file lists names only.
-- Pages move under `/c/<slug>/...`; header gets Back to lobby.
-- `skills/` stays the shared default; a company's playbook amendments are
-  stored in its own folder and only change its own teams.
-- One shared set of agents; every work order names its company and the MCP
-  server opens that company's database.
-- Order: record D8 (supersedes D7), registry plus lobby, move legro into its
-  own folder, per-company routes and passcodes, per-company playbooks, MCP
-  server company routing.
+Built: lobby, create and enter a company, a database and passcode per
+company, office at `/office`, Back to lobby, legro moved into its own
+folder, every company's database served for the agents.
+
+Still to do:
+- Per-company playbook edits: `skills/` stays the shared default; a
+  company's amendments are saved in its own folder and only change its own
+  teams.
+- MCP server company routing: every work order names its company and
+  `harness/mcp_server.py` opens that company's database (its port is in
+  `web/.data/companies.json`). Today the MCP server only reaches the company
+  in `.env` `DATABASE_URL` (legro).
 - Out of scope: public internet hosting (needs accounts, HTTPS, hosting).

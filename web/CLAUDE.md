@@ -7,33 +7,45 @@ is plain CSS in `src/app/globals.css`.
 
 ## Layout
 
-- `src/app/` pages: `/` office home, `/approvals`, `/work-orders/[id]`,
+- `src/app/` pages: `/` lobby, `/new` create a company, `/enter/[slug]`
+  passcode, `/office` office home, `/approvals`, `/work-orders/[id]`,
   `/playbooks` and `/playbooks/[...slug]` (read and amend), `/ledger`
-  (receipts), `/brain`, `/setup` (first run), `/unlock`, `/export` (JSON
+  (receipts), `/brain`, `/setup` (company essentials), `/export` (JSON
   backup route). `actions.ts` holds every server action.
 - `src/components/office/` the isometric office: `iso.ts` projection
   helpers, `zones.ts` room colours (shared by server and client),
   `Office.tsx` the SVG scene, room labels and the slide-in room drawer.
-- `src/lib/`: `sql.ts` database driver, `db.ts` typed queries, `lock.ts`
-  passcode and session, `office.ts` maps work orders onto rooms,
+- `src/lib/`: `companies.ts` registry (`web/.data/companies.json`), one
+  folder per company, one-time move of the old single-company layout;
+  `sql.ts` one database per company (`query` uses the current company,
+  `queryFor(slug)` an explicit one); `db.ts` typed queries; `lock.ts`
+  passcode and session per company; `office.ts` maps work orders onto rooms,
   `playbooks.ts` reads and writes `../skills`, `gateway.ts` calls the
   Orchestrator, `teams.ts`, `workOrders.ts`, `format.ts`, `diff.ts`,
   `markdown.ts`, `rubric.ts`.
-- `src/proxy.ts` (Next 16 name for middleware) redirects to `/unlock` when
-  a passcode is set and the session cookie is missing.
-- `scripts/dev.mjs` is `npm run dev`: starts PGlite with the socket server
-  on 127.0.0.1:5434, then `next dev`. `npm run dev:dashboard` starts only
-  the dashboard (then `sql.ts` opens the database in-process).
+- `src/proxy.ts` (Next 16 name for middleware): `/`, `/new` and
+  `/enter/*` are open; every other path needs the session of the company in
+  the `fc_company` cookie, else it redirects to the lobby. It is the only
+  place the `x-fc-company` request header is set (and it strips any client
+  copy); `sql.ts` reads the current company from that header.
+- `src/instrumentation.ts` opens every company's database at server start
+  so each is served on its port for the agents straight away.
+- `scripts/dev.mjs` is `npm run dev`: starts `next dev` on 127.0.0.1. The
+  dashboard process itself opens the databases and runs one PGlite socket
+  server per company.
 
 ## Rules that matter
 
-- Every server action calls `requireFounder()` first. The proxy alone is
-  not enough (Next docs, Data Security).
+- Every server action inside a company calls `requireFounder()` first; it
+  returns the company slug. The proxy alone is not enough (Next docs, Data
+  Security). Lobby actions (`enterCompany`, `createCompany`) run outside a
+  company and use `queryFor(slug)`.
 - Every founder action writes a receipt (`agent_run_logs`, agent
   `founder`).
 - Blocked tier is enforced server side too, not just hidden in the UI.
-- Never open `web/.data/postgres` from two processes at once: stop the
-  running server before starting another one on the same folder.
+- Never open a company's database folder from two processes at once:
+  stop the running server before starting another, or before moving or
+  deleting anything under `web/.data`.
 - Bind to 127.0.0.1 (no login beyond the passcode).
 
 ## Gotchas hit before
