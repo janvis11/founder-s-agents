@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { connection } from "next/server";
-import { query } from "@/lib/sql";
-import { SESSION_COOKIE, sessionValid } from "@/lib/lock";
+import { currentCompany, query } from "@/lib/sql";
+import { sessionCookie, sessionValid } from "@/lib/lock";
 import { listPlaybooks, readPlaybook } from "@/lib/playbooks";
 
 // GET /export: everything this office holds, as one JSON file the founder
@@ -10,7 +10,8 @@ const TABLES = ["company_brain", "briefs", "work_orders", "drafts", "agent_run_l
 
 export async function GET() {
   await connection();
-  if (!(await sessionValid((await cookies()).get(SESSION_COOKIE)?.value))) {
+  const slug = await currentCompany();
+  if (!slug || !(await sessionValid(slug, (await cookies()).get(sessionCookie(slug))?.value))) {
     return new Response("The office is locked.", { status: 401 });
   }
   const tables: Record<string, unknown[]> = {};
@@ -23,11 +24,11 @@ export async function GET() {
     if (pb) playbooks[pb.file] = pb.raw;
   }
   const exportedAt = new Date().toISOString();
-  const body = JSON.stringify({ product: "founders-corps", exported_at: exportedAt, tables, playbooks }, null, 2);
+  const body = JSON.stringify({ product: "founders-corps", company: slug, exported_at: exportedAt, tables, playbooks }, null, 2);
   return new Response(body, {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Disposition": `attachment; filename="founders-corps-backup-${exportedAt.slice(0, 10)}.json"`,
+      "Content-Disposition": `attachment; filename="founders-corps-${slug}-${exportedAt.slice(0, 10)}.json"`,
       "Cache-Control": "no-store",
     },
   });

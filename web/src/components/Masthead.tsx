@@ -1,29 +1,28 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { lockOffice } from "@/app/actions";
 import { attempt, getCompanyBrain, listLatestDrafts, listWorkOrders } from "@/lib/db";
-import { SESSION_COOKIE, readLock, sessionValid } from "@/lib/lock";
+import { currentCompany } from "@/lib/sql";
 import { NavLinks } from "./NavLinks";
 
 export async function Masthead() {
-  const locked = !(await sessionValid((await cookies()).get(SESSION_COOKIE)?.value));
-  if (locked) {
-    // Behind the lock, show nothing about the company.
+  const slug = await currentCompany();
+  if (!slug) {
+    // Lobby, new company, entering a company: no company is open.
     return (
       <header className="topbar">
-        <span className="brand">
+        <Link href="/" className="brand" aria-label="Founders Corps lobby">
           <span className="brand-mark" aria-hidden>
             FC
           </span>
           <span>
             <span className="brand-name">Founders Corps</span>
-            <span className="brand-sub">locked</span>
+            <span className="brand-sub">lobby</span>
           </span>
-        </span>
+        </Link>
       </header>
     );
   }
-  const hasLock = Boolean(await readLock());
+
   const state = await attempt(async () => {
     const [brain, drafts, orders] = await Promise.all([getCompanyBrain(), listLatestDrafts(), listWorkOrders()]);
     return {
@@ -37,13 +36,13 @@ export async function Masthead() {
 
   return (
     <header className="topbar">
-      <Link href="/" className="brand" aria-label="Founders Corps home">
+      <Link href="/office" className="brand" aria-label="Founders Corps office">
         <span className="brand-mark" aria-hidden>
           FC
         </span>
         <span>
           <span className="brand-name">Founders Corps</span>
-          <span className="brand-sub">{company ? `${company} · self-hosted` : "self-hosted founder HQ"}</span>
+          <span className="brand-sub">{company ?? slug}</span>
         </span>
       </Link>
       <NavLinks />
@@ -65,13 +64,14 @@ export async function Masthead() {
             <span className="dot" /> no database
           </span>
         )}
-        {hasLock && (
-          <form action={lockOffice}>
-            <button type="submit" className="pill lock-btn">
-              Lock
-            </button>
-          </form>
-        )}
+        <Link href="/" className="pill">
+          ← Lobby
+        </Link>
+        <form action={lockOffice}>
+          <button type="submit" className="pill lock-btn">
+            Lock
+          </button>
+        </form>
       </div>
     </header>
   );

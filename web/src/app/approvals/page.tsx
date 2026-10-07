@@ -45,7 +45,7 @@ export default async function Approvals() {
           {waiting.length === 0 && (
             <div className="empty">
               <p>No drafts waiting. Anything the outside world would see arrives here after the Reviewer passes it.</p>
-              <Link href="/" className="btn btn-quiet">
+              <Link href="/office" className="btn btn-quiet">
                 Dispatch work from the desk
               </Link>
             </div>
