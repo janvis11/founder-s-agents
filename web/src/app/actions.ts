@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { COOKIE_OPTIONS, SESSION_COOKIE, checkPasscode, readLock, sessionValid, setPasscode } from "@/lib/lock";
-import { query } from "@/lib/sql";
+import { addCompany, getCompany, renameCompany } from "@/lib/companies";
+import { COMPANY_COOKIE, COOKIE_OPTIONS, checkPasscode, readLock, sessionCookie, sessionValid, setPasscode } from "@/lib/lock";
+import { currentCompany, query, queryFor } from "@/lib/sql";
 import { sendToOrchestrator } from "@/lib/gateway";
 import { readPlaybook, writePlaybook } from "@/lib/playbooks";
 import type { CompanyBrain, Decision, Draft } from "@/lib/db";
@@ -19,9 +20,10 @@ export type FormState = { ok?: boolean; error?: string; message?: string } | nul
 async function receipt(
   skill: string,
   step: string,
-  opts: { workOrderId?: string | null; inputs?: object; output?: object } = {},
+  opts: { workOrderId?: string | null; inputs?: object; output?: object; company?: string } = {},
 ) {
-  await query(
+  const run = opts.company ? (t: string, p: unknown[]) => queryFor(opts.company!, t, p) : query;
+  await run(
     `insert into agent_run_logs (agent, skill, work_order_id, step, inputs, output)
      values ('founder', $1, $2, $3, $4, $5)`,
     [skill, opts.workOrderId ?? null, step, JSON.stringify(opts.inputs ?? {}), JSON.stringify(opts.output ?? {})],
@@ -36,31 +38,88 @@ function refreshAll() {
   revalidatePath("/", "layout");
 }
 
-/** Throws unless the caller holds this install's session (or no lock is set yet). */
-async function requireFounder() {
+/** Throws unless the caller holds the session of the company it is inside. */
+async function requireFounder(): Promise<string> {
+  const slug = await currentCompany();
   const jar = await cookies();
-  if (!(await sessionValid(jar.get(SESSION_COOKIE)?.value))) {
-    throw new Error("The office is locked. Unlock it with your passcode first.");
+  if (!slug || !(await sessionValid(slug, jar.get(sessionCookie(slug))?.value))) {
+    throw new Error("The office is locked. Enter it from the lobby with its passcode.");
   }
+  return slug;
 }
 
-// Lock ------------------------------------------------------------------------
-
-export async function unlock(_prev: FormState, form: FormData): Promise<FormState> {
-  const token = await checkPasscode(String(form.get("passcode") ?? ""));
-  if (!token) {
-    // A small delay makes guessing slow without locking the founder out.
-    await new Promise((r) => setTimeout(r, 800));
-    return { error: "That passcode is not right." };
-  }
-  (await cookies()).set(SESSION_COOKIE, token, COOKIE_OPTIONS);
-  const next = String(form.get("next") ?? "/");
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/");
+async function openSession(slug: string, token: string) {
+  const jar = await cookies();
+  jar.set(sessionCookie(slug), token, COOKIE_OPTIONS);
+  jar.set(COMPANY_COOKIE, slug, COOKIE_OPTIONS);
 }
 
+function passcodeProblem(form: FormData): string | null {
+  const passcode = String(form.get("passcode") ?? "");
+  if (passcode.length < 6) return "Choose a passcode of at least 6 characters. It locks the office.";
+  if (passcode !== String(form.get("passcode_again") ?? "")) return "The two passcodes do not match.";
+  return null;
+}
+
+// Lobby -----------------------------------------------------------------------
+
+/** Enter a company with its passcode, or set one if the company has none yet. */
+export async function enterCompany(_prev: FormState, form: FormData): Promise<FormState> {
+  const company = await getCompany(text(form, "company"));
+  if (!company) return { error: "That company is not on this install." };
+  const passcode = String(form.get("passcode") ?? "");
+  let token: string | null;
+  if (await readLock(company.slug)) {
+    token = await checkPasscode(company.slug, passcode);
+    if (!token) {
+      // A small delay makes guessing slow without locking the founder out.
+      await new Promise((r) => setTimeout(r, 800));
+      return { error: "That passcode is not right." };
+    }
+  } else {
+    const problem = passcodeProblem(form);
+    if (problem) return { error: problem };
+    token = await setPasscode(company.slug, passcode);
+    await receipt("lock", "Set the office passcode", { company: company.slug });
+  }
+  await openSession(company.slug, token);
+  redirect("/office");
+}
+
+/** Create a company: its own folder, database and passcode, then step inside. */
+export async function createCompany(_prev: FormState, form: FormData): Promise<FormState> {
+  const name = text(form, "name");
+  const whatItDoes = text(form, "what_it_does");
+  if (!name) return { error: "Give the company a name." };
+  if (!whatItDoes) return { error: "Say what the product does. No team claims more than this." };
+  const problem = passcodeProblem(form);
+  if (problem) return { error: problem };
+
+  const company = await addCompany(name);
+  const brain: CompanyBrain = {
+    company: { name, one_liner: text(form, "one_liner") || null, stage: text(form, "stage") || "idea" },
+    product: { what_it_does: whatItDoes, current_state: null, live_url: null },
+    icp: { who: text(form, "icp_who") || null, evidence: null },
+    positioning: { differentiation: null, messaging: null },
+    constraints: { runway_months: null, monthly_burn: null, founder_hours_per_week: null },
+    decisions: [],
+    priorities: [],
+  };
+  await queryFor(company.slug, "update company_brain set data = $1, updated_at = now() where id = 1", [JSON.stringify(brain)]);
+  await receipt("company_brain", `Set up the company: ${name}`, { company: company.slug });
+  const token = await setPasscode(company.slug, String(form.get("passcode")));
+  await receipt("lock", "Set the office passcode", { company: company.slug });
+  await openSession(company.slug, token);
+  redirect("/office");
+}
+
+/** Lock this company's office and go back to the lobby. */
 export async function lockOffice(): Promise<void> {
-  (await cookies()).delete(SESSION_COOKIE);
-  redirect("/unlock");
+  const slug = await currentCompany();
+  const jar = await cookies();
+  if (slug) jar.delete(sessionCookie(slug));
+  jar.delete(COMPANY_COOKIE);
+  redirect("/");
 }
 
 // Desk --------------------------------------------------------------------
@@ -241,13 +300,7 @@ export async function addDecision(_prev: FormState, form: FormData): Promise<For
 
 /** First run: the few facts every team needs before any work order. */
 export async function setupCompany(_prev: FormState, form: FormData): Promise<FormState> {
-  await requireFounder();
-  const firstRun = !(await readLock());
-  const passcode = String(form.get("passcode") ?? "");
-  if (firstRun) {
-    if (passcode.length < 6) return { error: "Choose a passcode of at least 6 characters. It locks the office." };
-    if (passcode !== String(form.get("passcode_again") ?? "")) return { error: "The two passcodes do not match." };
-  }
+  const slug = await requireFounder();
   const name = text(form, "name");
   const whatItDoes = text(form, "what_it_does");
   if (!name) return { error: "Give the company a name." };
@@ -260,14 +313,10 @@ export async function setupCompany(_prev: FormState, form: FormData): Promise<Fo
     icp: { ...brain.icp, who: text(form, "icp_who") || null },
   };
   await query("update company_brain set data = $1, updated_at = now() where id = 1", [JSON.stringify(next)]);
-  await receipt("company_brain", `Set up the company: ${name}`);
-  if (firstRun) {
-    const token = await setPasscode(passcode);
-    (await cookies()).set(SESSION_COOKIE, token, COOKIE_OPTIONS);
-    await receipt("lock", "Set the office passcode");
-  }
+  await renameCompany(slug, name);
+  await receipt("company_brain", `Updated the company essentials: ${name}`);
   refreshAll();
-  redirect("/");
+  redirect("/office");
 }
 
 // Playbooks -------------------------------------------------------------------

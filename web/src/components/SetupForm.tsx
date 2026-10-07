@@ -2,19 +2,21 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { setupCompany } from "@/app/actions";
+import { createCompany, setupCompany } from "@/app/actions";
 
-function Submit() {
+function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="btn" disabled={pending}>
-      {pending ? "Setting up…" : "Open the office →"}
+      {pending ? "Saving…" : label}
     </button>
   );
 }
 
-export function SetupForm({ defaults, needsPasscode }: { needsPasscode: boolean; defaults: { name?: string | null; one_liner?: string | null; what_it_does?: string | null; icp_who?: string | null; stage?: string | null } }) {
-  const [state, action] = useActionState(setupCompany, null);
+/** "create" opens a new company (with its passcode); "edit" changes the current one. */
+export function SetupForm({ defaults, mode }: { mode: "create" | "edit"; defaults: { name?: string | null; one_liner?: string | null; what_it_does?: string | null; icp_who?: string | null; stage?: string | null } }) {
+  const [state, action] = useActionState(mode === "create" ? createCompany : setupCompany, null);
+  const needsPasscode = mode === "create";
   return (
     <form action={action} className="sheet sheet-body" style={{ maxWidth: 720 }}>
       {state?.error && (
@@ -83,7 +85,7 @@ export function SetupForm({ defaults, needsPasscode }: { needsPasscode: boolean;
           </div>
         </fieldset>
       )}
-      <Submit />
+      <Submit label={mode === "create" ? "Open the office →" : "Save essentials →"} />
     </form>
   );
 }
