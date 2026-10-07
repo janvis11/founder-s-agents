@@ -105,7 +105,7 @@ justify its own instance and skill folder.
 
 ---
 
-## D7: One install per founder. No shared, multi-company hosting.
+## D7: One install per founder. No shared, multi-company hosting. Superseded by D8.
 
 **Decision.** Each founder runs their own copy of Founders Corps, with its
 own database and its own `skills/` folder. One install holds exactly one
@@ -123,3 +123,24 @@ differentiator. ROADMAP already defers multi-tenant hosting.
 which case add a company switcher for a single owner first; or the product
 moves to a hosted offering, in which case multi-tenancy needs its own
 decision and its own security review.
+
+---
+
+## D8: Many companies per install. Supersedes D7.
+
+**Decision.** One install can hold many companies. `/` is a lobby listing
+them; each company has its own passcode and its own database folder
+(`web/.data/companies/<slug>/`), so companies are physically separate. The
+company you entered is remembered in a cookie; pages keep their paths.
+`skills/` stays the shared default rulebook. One set of agents serves the
+install.
+
+**Reasoning.** Janvi wants the product to serve many organisations, not one
+founder per install (D7). A separate database per company keeps D5's
+promise in a weaker but still real form: no shared tables, so one company's
+screens cannot read another's data, and a company leaves by taking its
+folder. Hosting on the public internet is still out of scope.
+
+**Revisit if.** The product is hosted publicly for strangers (then it needs
+real accounts, HTTPS and a security review), or the number of companies per
+install makes one database server per company too heavy to run.
