@@ -1,77 +1,85 @@
 # Progress
 
-The record of what has been built, decided and left open. Newest at the
-bottom of each section. Update it whenever work lands.
+The current state of the project, one section per area. When something
+changes, edit the section that describes it so it states the new truth. Do
+not append a new entry below an outdated one, and do not keep superseded
+statements. Last updated 2026-10-07.
 
-## Before the dashboard (Janvi's own work)
+## Playbooks and product docs
 
-- Playbooks: business_rules, review_rubric, orchestrator/planning,
-  growth/outreach_draft, growth/positioning_check, technical/scope_mvp,
-  finance/runway_tracker, design/product_design_direction,
-  design/brand_identity.
-- Product docs in `instructions/`, dashboard design guidance in `meta/`.
-- Phase 0 harness pieces: `db/schema.sql`, `docker-compose.yml`,
-  `harness/mcp_server.py`, `scripts/configure_instances.py`,
-  `scripts/sync_skills.py`, `cli.py`. Five Hermes profiles exist on this
-  machine (orchestrator, growth, technical, finance, design) with skills
-  synced and the MCP server registered. Never run end to end: no AWS keys.
+- Playbooks in `skills/`: business_rules, review_rubric,
+  orchestrator/planning, growth/outreach_draft, growth/positioning_check,
+  technical/scope_mvp, finance/runway_tracker,
+  design/product_design_direction, design/brand_identity.
+- Product docs in `instructions/` (PRODUCT, AGENTS, ROADMAP, DECISIONS
+  D1 to D7, GLOSSARY, EVALS, SKILL_AUTHORING, CLAUDE). Dashboard design
+  guidance in `meta/`.
 
-## Dashboard, 2026-09-27 to 2026-10-07
+## Agents (Hermes)
 
-1. Built the Next.js 16 dashboard in `web/`: office home, approvals,
-   work order page, playbook browser with amendments (diff plus required
-   reason, kept in a register), receipts ledger, company brain editor with
-   append-only decisions, brief box that calls the Orchestrator gateway.
-2. Schema additions: Design team allowed, briefs table, draft decisions and
-   contradictions, playbook_amendments. Schema stays idempotent.
-3. Design went through several rounds at Janvi's request. Final state:
-   white theme, a large edge-to-edge isometric office where every object
-   has real colour, a room per team with its own colour (Growth orange,
-   Technical sky blue, Finance green, Design purple, Orchestrator blue,
-   Reviewer slate, founder desk amber). Clicking a room opens a drawer that
-   slides in from the right edge (fixed, so it is visible at any scroll).
-   Rejected along the way: plain paper look ("boring"), rainbow team colours
-   on dark blue, pure black and white, glows.
-4. Demo data (fictional "Tallyroom") existed for a while, then was removed:
-   the dashboard is the real app now and starts empty.
-5. Product name set to **Founders Corps** (header, tab titles, greeting).
-6. First-run setup screen at `/setup` (name, one line, what the product
-   does, who it is for, stage, office passcode).
-7. Decision D7 recorded: one install per founder. (May be superseded, see
-   below.)
-8. Office passcode lock: scrypt hash in `web/.data/lock.json`, session
-   cookie, `src/proxy.ts` guards every page, every server action re-checks,
-   header hides company data while locked, Lock button.
-9. Backup: `/export` downloads all tables plus playbooks as one JSON file;
-   button on the Brain page.
-10. Shared database: `npm run dev` serves the local database on port 5434 so
-    the dashboard and the agents' MCP server use the same data. Root `.env`
-    `DATABASE_URL` updated to it. Verified from Python (psycopg) on
-    2026-10-07.
-11. Persistent project memory: root `CLAUDE.md`, this file,
-    `web/CLAUDE.md`, `db/CLAUDE.md`.
+- Five Hermes profiles exist on this machine: orchestrator, growth,
+  technical, finance, design, with skills synced and the MCP server
+  (`harness/mcp_server.py`) registered.
+- Not running: AWS Bedrock keys are not in `.env`. Janvi will provide them
+  later. Nothing that needs a live model can be built or tested until then.
+
+## Database
+
+- One schema file, `db/schema.sql`, idempotent, applied on every start.
+- Data lives in `web/.data/postgres`. `npm run dev` serves it on
+  127.0.0.1:5434 so the dashboard and the MCP server share it; root `.env`
+  `DATABASE_URL` points there. Verified from Python (psycopg).
+- Docker Postgres (port 5433) is the optional alternative
+  (`FOUNDER_AGENTS_DB=postgres`). Docker Desktop does not work on Janvi's
+  machine.
+- Live data: company **legro** (finance company, stage launched, product
+  "growing and managing ledgers", customer "business"), set up 2026-10-07,
+  passcode set, one brief sent (status broken: no Orchestrator running).
+  Runway, burn, hours per week, priorities and decisions are still empty.
+
+## Dashboard (`web/`)
+
+- Pages: office home, approvals, work order, playbooks (read and amend with
+  diff plus required reason, amendment register), receipts, company brain
+  (append-only decisions), first-run setup, unlock, backup export.
+- Office passcode lock: scrypt hash in `web/.data/lock.json`, session
+  cookie, `src/proxy.ts` guards every page, every server action re-checks,
+  header hides company data while locked, Lock button. Forgot passcode:
+  delete `web/.data/lock.json` and set a new one at `/setup`.
+- Backup: "Download a backup" on the Brain page, all tables plus playbooks
+  as one JSON file.
+- Product name in the UI: **Founders Corps**. The dashboard starts empty;
+  there is no demo data.
+- Design: white theme, large edge-to-edge isometric office, every object
+  coloured, each room its own colour (Growth orange, Technical sky blue,
+  Finance green, Design purple, Orchestrator blue, Reviewer slate, founder
+  desk amber). Clicking a room opens a drawer fixed to the right edge.
+  Janvi rejected: plain paper look, rainbow team colours on dark blue, pure
+  black and white, bluish dark themes, glows.
+
+## Decisions in force
+
+- D7: one install per founder, one company per install. A plan to replace
+  it with many companies per install is awaiting validation (below).
 
 ## Not committed on purpose
 
-- `web/public/assets/kenney/` (41 MB furniture images) and the old unused
+- `web/public/assets/kenney/` (41 MB furniture images) and the unused old
   office scene `web/src/components/IsoScene.tsx`, `web/src/lib/officeLayout.ts`.
 - `.claude/` (local preview config).
 
 ## Next steps
 
-1. Janvi fills the rest of the company brain (runway, burn, hours per week,
-   priorities, positioning, ICP evidence).
-2. When Janvi provides AWS keys: `python scripts/configure_instances.py`,
+1. Janvi fills the rest of the company brain.
+2. When AWS keys arrive: `python scripts/configure_instances.py`,
    `python scripts/sync_skills.py`, then start each gateway
-   (`orchestrator gateway run`, and growth, technical, finance, design).
-3. Code: the automatic loop (ROADMAP phase 1): Orchestrator issues work
-   orders, a team drafts, the Reviewer passes or bounces, founder approves.
-   Needs a live model.
-4. Eval harness (ROADMAP phase 2): fixtures in `evals/`, runner, baselines.
+   (`orchestrator gateway run`, then growth, technical, finance, design).
+3. Code without a live model, options offered to Janvi: many companies per
+   install (after validation), eval harness (ROADMAP phase 2), prompts for
+   empty company brain fields.
+4. Code with a live model: the automatic loop (ROADMAP phase 1).
 
 ## Plan awaiting validation: many companies per install
-
-Janvi wants many organisations to use one install. Proposed, not built:
 
 - `/` becomes a lobby listing companies, each with Enter, plus Create a
   new company. Each company has its own passcode.
