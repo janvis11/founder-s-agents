@@ -2,8 +2,12 @@
 
 Read this first in every session. It is the memory of this project: what
 exists, how to run it, how Janvi wants work done, and what is pending.
-Keep it current: when something changes, update this file and
-`instructions/PROGRESS.md` in the same commit series.
+
+Keep it current with every change, and update in place: rewrite the line or
+section that the change affects so it states the new truth. Never add a new
+point below an outdated one or leave superseded statements behind. This
+file, `instructions/PROGRESS.md`, `web/CLAUDE.md` and `db/CLAUDE.md` must
+always agree with each other and with the code.
 
 ## What it is
 
@@ -54,10 +58,11 @@ Docker Desktop does not work on Janvi's machine right now.
   in the background.
 - Keep changes small when asked for "something small".
 - Explain plans in simple terms before big changes; she validates first.
+- Keep these notes current by editing them in place (see top of file).
 
 ## Status (update every session)
 
-See `instructions/PROGRESS.md` for the full record. Short version:
+`instructions/PROGRESS.md` holds the current state by area. Short version:
 
 - Dashboard: built (office, approvals, work orders, playbooks with
   amendments, receipts, company brain, setup, passcode lock, backup export).
