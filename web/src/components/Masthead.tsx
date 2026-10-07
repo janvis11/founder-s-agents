@@ -1,24 +1,37 @@
 import Link from "next/link";
-import { lockOffice } from "@/app/actions";
+import { signOut } from "@/app/actions";
+import { currentAccount } from "@/lib/accounts";
 import { attempt, getCompanyBrain, listLatestDrafts, listWorkOrders } from "@/lib/db";
 import { currentCompany } from "@/lib/sql";
 import { NavLinks } from "./NavLinks";
 
 export async function Masthead() {
-  const slug = await currentCompany();
+  const account = await currentAccount();
+  const slug = account ? await currentCompany() : null;
+  const you = account && (
+    <>
+      <span className="pill">{account.name}</span>
+      <form action={signOut}>
+        <button type="submit" className="pill lock-btn">
+          Sign out
+        </button>
+      </form>
+    </>
+  );
   if (!slug) {
-    // Lobby, new company, entering a company: no company is open.
+    // Signed out, or signed in but not inside one of your offices.
     return (
       <header className="topbar">
-        <Link href="/" className="brand" aria-label="Founders Corps lobby">
+        <Link href="/" className="brand" aria-label="Founders Corps home">
           <span className="brand-mark" aria-hidden>
             FC
           </span>
           <span>
             <span className="brand-name">Founders Corps</span>
-            <span className="brand-sub">lobby</span>
+            <span className="brand-sub">{account ? "your offices" : "self-hosted founder HQ"}</span>
           </span>
         </Link>
+        {you && <div className="topbar-status">{you}</div>}
       </header>
     );
   }
@@ -65,13 +78,9 @@ export async function Masthead() {
           </span>
         )}
         <Link href="/" className="pill">
-          ← Lobby
+          ← Your offices
         </Link>
-        <form action={lockOffice}>
-          <button type="submit" className="pill lock-btn">
-            Lock
-          </button>
-        </form>
+        {you}
       </div>
     </header>
   );
