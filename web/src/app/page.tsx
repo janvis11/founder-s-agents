@@ -1,58 +1,70 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { listCompanies } from "@/lib/companies";
-import { readLock } from "@/lib/lock";
+import { companiesOf, currentAccount } from "@/lib/accounts";
+import { getCompany } from "@/lib/companies";
+import { buildOffice } from "@/lib/office";
+import { Arrival } from "@/components/Arrival";
 
 export const metadata: Metadata = { title: "Founders Corps" };
 
-// The lobby: every company on this install. Shows names only; everything
-// inside a company sits behind that company's passcode.
-export default async function Lobby() {
+// Signed out: the front desk. Signed in: only this founder's own companies.
+// Nothing about any other founder's company is ever read here (D9).
+export default async function Home() {
   await connection();
-  const companies = await listCompanies();
-  const locked = await Promise.all(companies.map(async (c) => Boolean(await readLock(c.slug))));
+  const account = await currentAccount();
+  if (!account) {
+    const { zones, disputes, flows, runwayMonths, companyName } = buildOffice([], [], [], [], null, "");
+    return <Arrival office={{ zones, disputes, flows, runwayMonths, companyName }} />;
+  }
+
+  const mine = (await Promise.all((await companiesOf(account.id)).map(getCompany))).filter(
+    (c): c is NonNullable<typeof c> => Boolean(c),
+  );
 
   return (
     <div className="lobby">
       <div className="page-head">
         <div>
-          <div className="kicker">Founders Corps · lobby</div>
+          <div className="kicker">Founders Corps · {account.name}</div>
           <h1 className="display">
-            Choose an office <span className="accent">each company has its own teams, data and passcode.</span>
+            Your offices <span className="accent">only yours. No one else&rsquo;s exist here.</span>
           </h1>
         </div>
         <Link href="/new" className="btn">
-          Create a new company →
+          Open another office →
         </Link>
       </div>
 
-      {companies.length === 0 ? (
+      {mine.length === 0 ? (
         <div className="empty">
-          <p>No companies yet. Create the first one: it gets its own office, its own database and its own passcode.</p>
+          <p>You have no office yet. Open one: it gets its own teams, its own data and its own receipts.</p>
           <Link href="/new" className="btn">
-            Create a company →
+            Open an office →
           </Link>
         </div>
       ) : (
         <ul className="lobby-list">
-          {companies.map((c, i) => (
+          {mine.map((c) => (
             <li key={c.slug}>
-              <Link href={`/enter/${c.slug}`} className="sheet lobby-card">
+              <a href={`/c/${c.slug}`} className="sheet lobby-card">
                 <span className="lobby-mark" aria-hidden>
                   {c.name.slice(0, 1).toUpperCase()}
                 </span>
                 <span className="lobby-name">{c.name}</span>
                 <span className="mono muted lobby-meta">
-                  {locked[i] ? "passcode set" : "no passcode yet"} · since{" "}
-                  {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  since {new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
-                <span className="lobby-enter">Enter →</span>
-              </Link>
+                <span className="lobby-enter">Walk in →</span>
+              </a>
             </li>
           ))}
         </ul>
       )}
+
+      <p className="muted" style={{ marginTop: 28, fontSize: 14 }}>
+        Had an office before accounts existed? <Link href="/claim">Claim it with its old passcode</Link>.
+      </p>
     </div>
   );
 }

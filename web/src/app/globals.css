@@ -2549,3 +2549,158 @@ select.input option {
   font-weight: 600;
   color: var(--blue);
 }
+
+/* ---------------------------------------------------------------- arrival (sign in, sign up) */
+
+.arrival {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 440px);
+  gap: 24px;
+  align-items: center;
+  min-height: calc(100vh - 160px);
+}
+
+@media (max-width: 1000px) {
+  .arrival {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.arrival .office {
+  width: 100%;
+  margin-left: 0;
+}
+
+.arrival-card {
+  padding: 28px 28px 24px;
+  display: grid;
+  gap: 4px;
+}
+
+.arrival-title {
+  font-size: clamp(34px, 3.4vw, 50px);
+  margin: 10px 0 18px;
+  padding: 0;
+}
+
+.arrival-title .accent {
+  display: block;
+  font-size: 0.42em;
+  line-height: 1.2;
+  margin-top: 8px;
+}
+
+.arrival-step {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.arrival-back {
+  justify-self: start;
+  font-size: 13px;
+  margin-top: 4px;
+  color: var(--dim);
+}
+
+.arrival-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.arrival-foot {
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+.arrival-foot a {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.pair2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0 12px;
+}
+
+.steps {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  padding: 0;
+  margin: 10px 0 4px;
+}
+
+.steps li {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: var(--line-strong);
+  transition: background 300ms;
+}
+
+.steps li[data-on] {
+  background: var(--blue);
+}
+
+.charter {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 6px;
+  display: grid;
+  gap: 8px;
+}
+
+.charter label {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.charter input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--blue);
+}
+
+.charter label:has(input:checked) {
+  border-color: var(--blue);
+  background: rgba(58, 61, 255, 0.06);
+}
+
+.plaque {
+  display: grid;
+  gap: 2px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--approve);
+  width: fit-content;
+}
+
+.plaque strong {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 62;
+  font-weight: 500;
+  font-size: 30px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.plaque span:last-child {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--dim);
+}
