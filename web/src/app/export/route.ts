@@ -1,7 +1,5 @@
-import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { currentCompany, query } from "@/lib/sql";
-import { sessionCookie, sessionValid } from "@/lib/lock";
 import { listPlaybooks, readPlaybook } from "@/lib/playbooks";
 
 // GET /export: everything this office holds, as one JSON file the founder
@@ -11,8 +9,9 @@ const TABLES = ["company_brain", "briefs", "work_orders", "drafts", "agent_run_l
 export async function GET() {
   await connection();
   const slug = await currentCompany();
-  if (!slug || !(await sessionValid(slug, (await cookies()).get(sessionCookie(slug))?.value))) {
-    return new Response("The office is locked.", { status: 401 });
+  // Signed in and a member of this company, or nothing (D9).
+  if (!slug) {
+    return new Response("Not found.", { status: 404 });
   }
   const tables: Record<string, unknown[]> = {};
   for (const table of TABLES) {

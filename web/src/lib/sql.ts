@@ -1,9 +1,12 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { headers } from "next/headers";
+import { cache } from "react";
+import { redirect } from "next/navigation";
 import { Pool } from "pg";
 import type { PGlite } from "@electric-sql/pglite";
 import { COMPANY_HEADER, companyDir, getCompany, isSlug } from "./companies";
+import { currentAccount, isMember } from "./accounts";
 
 // Every company has its own database (D8): web/.data/companies/<slug>/postgres,
 // opened in this process for the dashboard and served on the company's port
@@ -21,20 +24,29 @@ type Driver = (text: string, params: unknown[]) => Promise<unknown[]>;
 const g = globalThis as unknown as { fcDrivers?: Map<string, Promise<Driver>>; fcDocker?: Promise<Driver> };
 const drivers = (g.fcDrivers ??= new Map());
 
-/** The company the current request is inside, as set by the proxy. */
-export async function currentCompany(): Promise<string | null> {
+/**
+ * The company the current request is inside: the one the proxy passed on
+ * from the founder's cookie, and only if the signed-in founder is a member
+ * of it (D9). Anything else is treated as no company at all.
+ */
+export const currentCompany = cache(async (): Promise<string | null> => {
+  let slug: string | null;
   try {
-    const slug = (await headers()).get(COMPANY_HEADER);
-    return isSlug(slug) ? slug : null;
+    slug = (await headers()).get(COMPANY_HEADER);
   } catch {
     return null;
   }
-}
+  if (!isSlug(slug)) return null;
+  const account = await currentAccount();
+  if (!account || !(await isMember(account.id, slug))) return null;
+  return (await getCompany(slug)) ? slug : null;
+});
 
 /** Query the database of the company the current request is inside. */
 export async function query(text: string, params: unknown[] = []): Promise<unknown[]> {
   const slug = await currentCompany();
-  if (!slug) throw new Error("No company selected. Enter a company from the lobby first.");
+  // Not signed in, not a member, or no such company: all look the same.
+  if (!slug) redirect("/");
   return queryFor(slug, text, params);
 }
 
