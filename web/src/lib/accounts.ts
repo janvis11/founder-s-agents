@@ -36,6 +36,18 @@ create table if not exists memberships (
   created_at timestamptz not null default now(),
   primary key (account_id, company_id)
 );
+alter table accounts add column if not exists signature text;
+create table if not exists keycards (
+  id text primary key,
+  account_id text not null references accounts(id),
+  secret_hash text not null,
+  pin_salt text not null,
+  pin_hash text not null,
+  failed_attempts integer not null default 0,
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz,
+  revoked_at timestamptz
+);
 `;
 
 const g = globalThis as unknown as { fcInstall?: Promise<PGlite> };
@@ -146,4 +158,81 @@ export async function companiesOf(accountId: string): Promise<string[]> {
 export async function isOwned(companyId: string): Promise<boolean> {
   const [row] = await rows("select 1 from memberships where company_id = $1", [companyId]);
   return Boolean(row);
+}
+
+// Keycards -------------------------------------------------------------------
+//
+// A keycard is a file the founder keeps: a keycard id and a long random
+// secret. Signing in with it needs the file AND its 6-digit PIN. The server
+// keeps only a hash of the secret and a salted scrypt hash of the PIN. Five
+// wrong PINs switch the card off.
+
+const MAX_PIN_FAILURES = 5;
+
+export type KeycardFile = { product: "founders-corps"; v: 1; id: string; secret: string };
+export type KeycardRow = { id: string; created_at: Date; last_used_at: Date | null; revoked_at: Date | null; failed_attempts: number };
+
+export async function issueKeycard(accountId: string, pin: string): Promise<KeycardFile> {
+  const id = randomBytes(9).toString("base64url");
+  const secret = randomBytes(32).toString("base64url");
+  const salt = randomBytes(16);
+  const pinHash = await scrypt(pin, salt, 32);
+  await rows(
+    "insert into keycards (id, account_id, secret_hash, pin_salt, pin_hash) values ($1, $2, $3, $4, $5)",
+    [id, accountId, hashId(secret), salt.toString("hex"), pinHash.toString("hex")],
+  );
+  return { product: "founders-corps", v: 1, id, secret };
+}
+
+/** The account for this keycard and PIN, or null. One answer for every kind of miss. */
+export async function verifyKeycard(file: Partial<KeycardFile>, pin: string): Promise<Account | null> {
+  if (typeof file.id !== "string" || typeof file.secret !== "string") return null;
+  const [row] = await rows<{ account_id: string; secret_hash: string; pin_salt: string; pin_hash: string; failed_attempts: number }>(
+    "select account_id, secret_hash, pin_salt, pin_hash, failed_attempts from keycards where id = $1 and revoked_at is null",
+    [file.id],
+  );
+  if (!row) return null;
+  const secretOk = timingSafeEqual(Buffer.from(hashId(file.secret)), Buffer.from(row.secret_hash));
+  if (!secretOk) return null;
+  const pinOk = timingSafeEqual(await scrypt(pin, Buffer.from(row.pin_salt, "hex"), 32), Buffer.from(row.pin_hash, "hex"));
+  if (!pinOk) {
+    const failures = row.failed_attempts + 1;
+    await rows(
+      "update keycards set failed_attempts = $2, revoked_at = case when $2 >= $3 then now() else revoked_at end where id = $1",
+      [file.id, failures, MAX_PIN_FAILURES],
+    );
+    return null;
+  }
+  await rows("update keycards set failed_attempts = 0, last_used_at = now() where id = $1", [file.id]);
+  const [account] = await rows<Account>("select id, email, name from accounts where id = $1", [row.account_id]);
+  return account ?? null;
+}
+
+export async function listKeycards(accountId: string): Promise<KeycardRow[]> {
+  return rows<KeycardRow>(
+    "select id, created_at, last_used_at, revoked_at, failed_attempts from keycards where account_id = $1 order by created_at desc",
+    [accountId],
+  );
+}
+
+export async function revokeKeycard(accountId: string, id: string): Promise<void> {
+  await rows("update keycards set revoked_at = now() where id = $1 and account_id = $2 and revoked_at is null", [id, accountId]);
+}
+
+// The printed card -------------------------------------------------------------
+
+export type CardFace = { name: string; company: string | null; since: string; signature: string | null };
+
+/** What is printed on this founder's keycard. Only ever shown to the founder. */
+export async function cardFace(accountId: string, companyName: string | null): Promise<CardFace | null> {
+  const [row] = await rows<{ name: string; signature: string | null; created_at: Date }>(
+    "select name, signature, created_at from accounts where id = $1",
+    [accountId],
+  );
+  if (!row) return null;
+  return { name: row.name, company: companyName, since: new Date(row.created_at).toISOString(), signature: row.signature };
+}
+
+export async function setSignature(accountId: string, signature: string): Promise<void> {
+  await rows("update accounts set signature = $2 where id = $1", [accountId, signature]);
 }

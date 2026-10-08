@@ -83,7 +83,7 @@ async function openCompany(slug: string): Promise<Driver> {
     const { PGLiteSocketServer } = await import("@electric-sql/pglite-socket");
     await new PGLiteSocketServer({ db, host: "127.0.0.1", port: company.port, maxConnections: 10 }).start();
   } catch (error) {
-    console.error(`[founders-corps] could not serve ${slug} on port ${company.port}:`, error);
+    console.error(`[aloft] could not serve ${slug} on port ${company.port}:`, error);
   }
   return async (text, params) => (await db.query(text, params)).rows;
 }

@@ -31,15 +31,7 @@ export type OfficeProps = {
   companyName: string;
   /** Headline and stats, laid over the sky above the office. */
   children?: ReactNode;
-  /**
-   * Arrival mode for the sign-in and sign-up screens: the building starts
-   * dark and `lit` rooms (0 to 7) have their lights on. No clicks, no drawer.
-   */
-  arrival?: { lit: number };
 };
-
-/** The order rooms light up as a founder arrives. */
-const ARRIVAL_ORDER: ZoneKey[] = ["founder", "orchestrator", "growth", "technical", "finance", "design", "reviewer"];
 
 // ---------------------------------------------------------------- palette
 
@@ -571,9 +563,7 @@ function zoneItems(z: Record<ZoneKey, ZoneState>, held: number, waiting: number)
 
 // ---------------------------------------------------------------- component
 
-export function Office({ zones, disputes, flows, runwayMonths, children, arrival }: OfficeProps) {
-  const lit = arrival ? Math.max(0, Math.min(7, arrival.lit)) : 7;
-  const isLit = (k: ZoneKey) => !arrival || ARRIVAL_ORDER.indexOf(k) < lit;
+export function Office({ zones, disputes, flows, runwayMonths, children }: OfficeProps) {
   const [selected, setSelected] = useState<ZoneKey | null>(null);
   const [hover, setHover] = useState<ZoneKey | null>(null);
   const [motion, setMotion] = useState(false);
@@ -621,17 +611,7 @@ export function Office({ zones, disputes, flows, runwayMonths, children, arrival
   return (
     <div className="office">
       {children && <div className="office-overlay">{children}</div>}
-      <svg
-        viewBox={vb}
-        className="office-svg"
-        role="img"
-        aria-label={arrival ? "Your office, lighting up as you arrive." : "Your office. Each room is a team. Select a room to see its work."}
-        style={
-          arrival
-            ? { filter: `brightness(${0.3 + (0.7 * lit) / 7}) saturate(${0.35 + (0.65 * lit) / 7})`, transition: "filter 900ms ease" }
-            : undefined
-        }
-      >
+      <svg viewBox={vb} className="office-svg" role="img" aria-label="Your office. Each room is a team. Select a room to see its work.">
         <defs>
           <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#6fb4ff" />
@@ -762,7 +742,7 @@ export function Office({ zones, disputes, flows, runwayMonths, children, arrival
         </g>
 
         {/* hit areas + labels */}
-        {!arrival && zoneKeys.map((k) => {
+        {zoneKeys.map((k) => {
           const z = ZONES[k];
           return (
             <polygon
@@ -776,7 +756,7 @@ export function Office({ zones, disputes, flows, runwayMonths, children, arrival
             />
           );
         })}
-        {zoneKeys.filter(isLit).map((k) => {
+        {zoneKeys.map((k) => {
           const [x, y, zz] = ZONES[k].label;
           const p = pt(x, y, zz ?? 0);
           const s = zones[k];
@@ -788,14 +768,14 @@ export function Office({ zones, disputes, flows, runwayMonths, children, arrival
               key={`label-${k}`}
               transform={`translate(${p.x} ${p.y}) ${on ? "translate(0 -4)" : ""}`}
               className="zone-label"
-              tabIndex={arrival ? -1 : 0}
-              role={arrival ? undefined : "button"}
-              aria-label={arrival ? undefined : `${s.label}: ${s.status}. Open.`}
-              onClick={arrival ? undefined : () => setSelected(k)}
-              onKeyDown={arrival ? undefined : (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setSelected(k))}
-              onMouseEnter={arrival ? undefined : () => setHover(k)}
-              onMouseLeave={arrival ? undefined : () => setHover(null)}
-              style={arrival ? { pointerEvents: "none" } : { cursor: "pointer", transition: "transform 180ms" }}
+              tabIndex={0}
+              role="button"
+              aria-label={`${s.label}: ${s.status}. Open.`}
+              onClick={() => setSelected(k)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setSelected(k))}
+              onMouseEnter={() => setHover(k)}
+              onMouseLeave={() => setHover(null)}
+              style={{ cursor: "pointer", transition: "transform 180ms" }}
             >
               <line x1={0} y1={0} x2={0} y2={18} stroke={ZONE_COLOR[k]} strokeOpacity={0.8} />
               <circle cx={0} cy={18} r={2.5} fill={ZONE_COLOR[k]} />
@@ -821,17 +801,17 @@ export function Office({ zones, disputes, flows, runwayMonths, children, arrival
         })}
       </svg>
 
-      {!arrival && <div className="office-legend" aria-hidden>
+      <div className="office-legend" aria-hidden>
         <span><i style={{ background: "#3a3dff" }} /> auto</span>
         <span><i style={{ background: "#f59e0b" }} /> needs you</span>
         <span><i style={{ background: "#e11d48" }} /> blocked</span>
         <span className="muted">click a room</span>
-      </div>}
+      </div>
 
-      {!arrival && sel && selected && (
+      {sel && selected && (
         <div className="room-backdrop" onClick={() => setSelected(null)} aria-hidden />
       )}
-      {!arrival && sel && selected && (
+      {sel && selected && (
         <aside
           key={selected}
           className="room-panel"

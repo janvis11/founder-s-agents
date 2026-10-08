@@ -4,7 +4,7 @@ import { attempt, getCompanyBrain } from "@/lib/db";
 import { Broken } from "@/components/Broken";
 import { SetupForm } from "@/components/SetupForm";
 
-export const metadata: Metadata = { title: "Set up · Founders Corps" };
+export const metadata: Metadata = { title: "Set up · Aloft" };
 
 export default async function Setup() {
   const state = await attempt(getCompanyBrain);

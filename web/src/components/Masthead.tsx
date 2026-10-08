@@ -3,32 +3,28 @@ import { signOut } from "@/app/actions";
 import { currentAccount } from "@/lib/accounts";
 import { attempt, getCompanyBrain, listLatestDrafts, listWorkOrders } from "@/lib/db";
 import { currentCompany } from "@/lib/sql";
+import { Logo } from "./Logo";
 import { NavLinks } from "./NavLinks";
 
 export async function Masthead() {
   const account = await currentAccount();
   const slug = account ? await currentCompany() : null;
   const you = account && (
-    <>
-      <span className="pill">{account.name}</span>
-      <form action={signOut}>
-        <button type="submit" className="pill lock-btn">
-          Sign out
-        </button>
-      </form>
-    </>
+    <form action={signOut}>
+      <button type="submit" className="pill lock-btn" title="Sign out">
+        {account.name} · Sign out
+      </button>
+    </form>
   );
   if (!slug) {
     // Signed out, or signed in but not inside one of your offices.
     return (
       <header className="topbar">
-        <Link href="/" className="brand" aria-label="Founders Corps home">
-          <span className="brand-mark" aria-hidden>
-            FC
-          </span>
+        <Link href="/" className="brand" aria-label="Aloft home">
+          <Logo />
           <span>
-            <span className="brand-name">Founders Corps</span>
-            <span className="brand-sub">{account ? "your offices" : "self-hosted founder HQ"}</span>
+            <span className="brand-name">Aloft</span>
+            <span className="brand-sub">{account ? "your offices" : "Founders Corps"}</span>
           </span>
         </Link>
         {you && <div className="topbar-status">{you}</div>}
@@ -49,12 +45,10 @@ export async function Masthead() {
 
   return (
     <header className="topbar">
-      <Link href="/office" className="brand" aria-label="Founders Corps office">
-        <span className="brand-mark" aria-hidden>
-          FC
-        </span>
+      <Link href="/office" className="brand" aria-label="Aloft office">
+        <Logo />
         <span>
-          <span className="brand-name">Founders Corps</span>
+          <span className="brand-name">Aloft</span>
           <span className="brand-sub">{company ?? slug}</span>
         </span>
       </Link>
@@ -68,7 +62,7 @@ export async function Masthead() {
             <Link href="/approvals#held" className="pill" data-tone={state.value.held ? "blocked" : undefined}>
               <span className="dot" /> {state.value.held} held
             </Link>
-            <span className="pill" data-tone="auto">
+            <span className="pill pill-wide" data-tone="auto">
               <span className="dot" /> {state.value.inFlight} in flight
             </span>
           </>
@@ -78,7 +72,7 @@ export async function Masthead() {
           </span>
         )}
         <Link href="/" className="pill">
-          ← Your offices
+          ← Offices
         </Link>
         {you}
       </div>

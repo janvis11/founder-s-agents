@@ -4,7 +4,7 @@ import { ACCOUNT_HEADER, COMPANY_COOKIE, SESSION_COOKIE, SESSION_HEADER, readTok
 
 // Front door (D9).
 // - "/" and "/signup" are open: signed out, "/" is the sign-in screen.
-// - "/new", "/claim" and "/c/<id>" need a signed-in founder.
+// - "/new", "/claim", "/key" and "/c/<id>" need a signed-in founder.
 // - Everything else is inside a company: it also needs the company cookie.
 // This is the only place the account, session and company headers are set,
 // and any copy a client sends is removed first. The server then checks the
@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
 
   if (path === "/" || path === "/signup") return pass();
   if (!claims) return home();
-  if (path === "/new" || path === "/claim" || path.startsWith("/c/")) return pass();
+  if (path === "/new" || path === "/claim" || path === "/key" || path.startsWith("/c/")) return pass();
 
   const company = request.cookies.get(COMPANY_COOKIE)?.value;
   if (!isSlug(company)) return home();

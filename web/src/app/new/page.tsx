@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { currentAccount } from "@/lib/accounts";
 import { SetupForm } from "@/components/SetupForm";
 
-export const metadata: Metadata = { title: "Open another office · Founders Corps" };
+export const metadata: Metadata = { title: "Open another office · Aloft" };
 
 export default async function NewCompany() {
   if (!(await currentAccount())) redirect("/");

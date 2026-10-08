@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { currentAccount } from "@/lib/accounts";
 import { ClaimForm } from "@/components/ClaimForm";
 
-export const metadata: Metadata = { title: "Claim an office · Founders Corps" };
+export const metadata: Metadata = { title: "Claim an office · Aloft" };
 
 // Lists nothing: the founder types the name and old passcode of an office set
 // up before accounts. Every kind of miss gets the same answer (D9).

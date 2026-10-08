@@ -6,7 +6,7 @@ import { GROUP_ORDER, listPlaybooks } from "@/lib/playbooks";
 import { TEAM_ROLE, instancesUsing, teamLabel } from "@/lib/teams";
 import { ZONE_COLOR, type ZoneKey } from "@/components/office/zones";
 
-export const metadata: Metadata = { title: "Playbooks · Founders Corps" };
+export const metadata: Metadata = { title: "Playbooks · Aloft" };
 
 export default async function Playbooks() {
   const playbooks = await listPlaybooks();
@@ -38,7 +38,7 @@ export default async function Playbooks() {
           className="toc-group"
           key={group}
           aria-labelledby={`g-${group}`}
-          style={{ ["--group" as string]: group === "shared" ? "#6b7bff" : ZONE_COLOR[group as ZoneKey] }}
+          style={{ ["--group" as string]: group === "shared" ? "#0d1030" : ZONE_COLOR[group as ZoneKey] }}
         >
           <div>
             <h2 id={`g-${group}`}>{group === "shared" ? "Every team" : teamLabel(group)}</h2>

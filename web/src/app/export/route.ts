@@ -27,7 +27,7 @@ export async function GET() {
   return new Response(body, {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Disposition": `attachment; filename="founders-corps-${slug}-${exportedAt.slice(0, 10)}.json"`,
+      "Content-Disposition": `attachment; filename="aloft-${slug}-${exportedAt.slice(0, 10)}.json"`,
       "Cache-Control": "no-store",
     },
   });

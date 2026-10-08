@@ -5,7 +5,7 @@ import { day } from "@/lib/format";
 import { teamLabel } from "@/lib/teams";
 import { Broken } from "@/components/Broken";
 
-export const metadata: Metadata = { title: "Receipts · Founders Corps" };
+export const metadata: Metadata = { title: "Receipts · Aloft" };
 
 export default async function Ledger(props: PageProps<"/ledger">) {
   const { agent } = await props.searchParams;

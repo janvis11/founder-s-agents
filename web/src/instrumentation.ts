@@ -8,7 +8,7 @@ export async function register() {
   void listCompanies().then((companies) =>
     Promise.allSettled(companies.map((c) => queryFor(c.slug, "select 1"))).then((results) =>
       results.forEach((r, i) => {
-        if (r.status === "rejected") console.error(`[founders-corps] could not open ${companies[i].slug}:`, r.reason);
+        if (r.status === "rejected") console.error(`[aloft] could not open ${companies[i].slug}:`, r.reason);
       }),
     ),
   );

@@ -9,7 +9,7 @@ const serif = Source_Serif_4({ variable: "--font-serif", subsets: ["latin"], axe
 const mono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
-  title: "Founders Corps",
+  title: "Aloft · Founders Corps",
   description: "Your office: four teams, one Orchestrator, and nothing leaves without your sign-off.",
 };
 

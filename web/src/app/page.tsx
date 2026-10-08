@@ -3,20 +3,16 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { companiesOf, currentAccount } from "@/lib/accounts";
 import { getCompany } from "@/lib/companies";
-import { buildOffice } from "@/lib/office";
-import { Arrival } from "@/components/Arrival";
+import { KeycardSignIn } from "@/components/keycard/KeycardSignIn";
 
-export const metadata: Metadata = { title: "Founders Corps" };
+export const metadata: Metadata = { title: "Aloft · Founders Corps" };
 
 // Signed out: the front desk. Signed in: only this founder's own companies.
 // Nothing about any other founder's company is ever read here (D9).
 export default async function Home() {
   await connection();
   const account = await currentAccount();
-  if (!account) {
-    const { zones, disputes, flows, runwayMonths, companyName } = buildOffice([], [], [], [], null, "");
-    return <Arrival office={{ zones, disputes, flows, runwayMonths, companyName }} />;
-  }
+  if (!account) return <KeycardSignIn />;
 
   const mine = (await Promise.all((await companiesOf(account.id)).map(getCompany))).filter(
     (c): c is NonNullable<typeof c> => Boolean(c),
@@ -26,7 +22,7 @@ export default async function Home() {
     <div className="lobby">
       <div className="page-head">
         <div>
-          <div className="kicker">Founders Corps · {account.name}</div>
+          <div className="kicker">Aloft · {account.name}</div>
           <h1 className="display">
             Your offices <span className="accent">only yours. No one else&rsquo;s exist here.</span>
           </h1>
@@ -63,7 +59,8 @@ export default async function Home() {
       )}
 
       <p className="muted" style={{ marginTop: 28, fontSize: 14 }}>
-        Had an office before accounts existed? <Link href="/claim">Claim it with its old passcode</Link>.
+        <Link href="/key">Your keycards</Link> · sign in elsewhere with a file and a PIN. Had an office before accounts
+        existed? <Link href="/claim">Claim it with its old passcode</Link>.
       </p>
     </div>
   );

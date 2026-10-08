@@ -5,16 +5,23 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   addMembership,
+  cardFace,
   companiesOf,
   createAccount,
   currentAccount,
   isOwned,
+  issueKeycard,
   openSession,
+  revokeKeycard,
   revokeSession,
+  setSignature,
+  verifyKeycard,
   verifyPassword,
   type Account,
+  type CardFace,
+  type KeycardFile,
 } from "@/lib/accounts";
-import { addCompany, listCompanies, renameCompany } from "@/lib/companies";
+import { addCompany, getCompany, listCompanies, renameCompany } from "@/lib/companies";
 import { checkOldPasscode, retireOldPasscode } from "@/lib/lock";
 import { COMPANY_COOKIE, COOKIE_OPTIONS, SESSION_COOKIE, issueToken, readToken } from "@/lib/session";
 import { currentCompany, query, queryFor } from "@/lib/sql";
@@ -28,7 +35,17 @@ import { teamLabel } from "@/lib/teams";
 // the company (D9). The proxy alone is not enough (Next docs, Data
 // Security). Every action writes a receipt.
 
-export type FormState = { ok?: boolean; error?: string; message?: string; next?: string } | null;
+export type FormState = {
+  ok?: boolean;
+  error?: string;
+  message?: string;
+  next?: string;
+  /** Sign in: the founder's printed keycard, shown as it slides into the reader. */
+  card?: CardFace | null;
+  /** Issue a keycard: the file to download. */
+  file?: string;
+  filename?: string;
+} | null;
 
 async function receipt(
   skill: string,
@@ -120,8 +137,9 @@ export async function signUp(_prev: FormState, form: FormData): Promise<FormStat
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "That does not look like an email address." };
   const problem = passwordProblem(form);
   if (problem) return { error: problem };
-  if (CHARTER.some((_, i) => form.get(`charter_${i}`) !== "on")) {
-    return { error: "Agree to the three lines of the charter to open your office." };
+  const signature = String(form.get("signature") ?? "");
+  if (!isSignature(signature)) {
+    return { error: "Sign the charter with your signature to open your office." };
   }
   if (!text(form, "company_name") || !text(form, "what_it_does")) {
     return { error: "Name the company and say what the product does." };
@@ -132,12 +150,30 @@ export async function signUp(_prev: FormState, form: FormData): Promise<FormStat
     await slow();
     return { error: "That email cannot be used to open a new account. If it is yours, sign in instead." };
   }
+  await setSignature(account.id, signature);
   const founded = await foundCompany(account, form);
   if ("error" in founded) return founded;
   await receipt("charter", "Signed the founder's charter", { company: founded.id, output: { charter: CHARTER } });
   await startSession(account);
   await enterCompanyCookie(founded.id);
-  return { ok: true, next: "/office" };
+  return { ok: true, next: "/office", card: await cardFace(account.id, text(form, "company_name")) };
+}
+
+/** A drawn signature: an SVG path of straight segments, nothing else. */
+function isSignature(path: string): boolean {
+  return path.length > 20 && path.length < 12000 && /^[ML0-9 .,-]+$/.test(path) && (path.match(/L/g) ?? []).length >= 4;
+}
+
+async function arrive(account: Account): Promise<FormState> {
+  await startSession(account);
+  const mine = await companiesOf(account.id);
+  const first = mine.length ? await getCompany(mine[0]) : null;
+  const card = await cardFace(account.id, mine.length === 1 ? (first?.name ?? null) : null);
+  if (mine.length === 1) {
+    await enterCompanyCookie(mine[0]);
+    return { ok: true, next: "/office", card };
+  }
+  return { ok: true, next: "/", card };
 }
 
 /** Sign in: the lights come on. Same answer for a wrong email or a wrong password. */
@@ -147,13 +183,41 @@ export async function signIn(_prev: FormState, form: FormData): Promise<FormStat
     await slow();
     return { error: "That email and password do not open an office here." };
   }
-  await startSession(account);
-  const mine = await companiesOf(account.id);
-  if (mine.length === 1) {
-    await enterCompanyCookie(mine[0]);
-    return { ok: true, next: "/office" };
+  return arrive(account);
+}
+
+/** Sign in with a keycard file and its PIN. Same answer for every kind of miss. */
+export async function signInWithKeycard(_prev: FormState, form: FormData): Promise<FormState> {
+  let file: Partial<KeycardFile> = {};
+  try {
+    file = JSON.parse(String(form.get("keycard") ?? "{}"));
+  } catch {
+    return { error: "That file is not an Aloft keycard." };
   }
-  return { ok: true, next: "/" };
+  const account = await verifyKeycard(file, String(form.get("pin") ?? ""));
+  if (!account) {
+    await slow();
+    return { error: "That keycard and PIN do not open an office here." };
+  }
+  return arrive(account);
+}
+
+/** Issue a keycard file protected by a 6-digit PIN. */
+export async function issueKeycardAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const account = await requireAccount();
+  const pin = String(form.get("pin") ?? "");
+  if (!/^\d{6}$/.test(pin)) return { error: "The PIN is 6 digits." };
+  if (pin !== String(form.get("pin_again") ?? "")) return { error: "The two PINs do not match." };
+  const file = await issueKeycard(account.id, pin);
+  const slug = account.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "founder";
+  revalidatePath("/key");
+  return { ok: true, file: JSON.stringify(file), filename: `aloft-key-${slug}.fckey` };
+}
+
+export async function revokeKeycardAction(form: FormData): Promise<void> {
+  const account = await requireAccount();
+  await revokeKeycard(account.id, String(form.get("id") ?? ""));
+  revalidatePath("/key");
 }
 
 export async function signOut(): Promise<void> {
