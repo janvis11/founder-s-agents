@@ -5,11 +5,11 @@ reopen it. A decision without a `revisit_if` is not recorded.
 
 ---
 
-## D1 — Three teams, not four. No HR.
+## D1: Three teams, not four. No HR.
 
 **Decision.** Growth, Technical, Finance. No HR team.
 
-**Reasoning.** HR's core function is hiring, which is on the blocked list —
+**Reasoning.** HR's core function is hiring, which is on the blocked list:
 an agent may never take hiring action. A team whose entire output is blocked
 is not a team, it is a document generator. Cutting it removes a whole
 instance and its review surface.
@@ -19,12 +19,12 @@ headcount, where HR work is policy and onboarding rather than hiring.
 
 ---
 
-## D2 — Separate Hermes instances per team, not one agent with many skills.
+## D2: Separate Hermes instances per team, not one agent with many skills.
 
 **Decision.** Four processes: Orchestrator, Growth, Technical, Finance.
 
 **Reasoning.** A single skill folder spanning finance and marketing becomes
-incoherent — the model loses the thread of which frame it is in. Separate
+incoherent: the model loses the thread of which frame it is in. Separate
 instances keep each folder tight and let one team be restarted or upgraded
 independently.
 
@@ -33,14 +33,14 @@ self-hosting setup. Measure before changing.
 
 ---
 
-## D3 — No growth prediction.
+## D3: No growth prediction.
 
 **Decision.** The product diagnoses current state and projects scenarios with
 stated formulas. It does not forecast growth from usage data.
 
 **Reasoning.** Early-stage companies have thin, noisy data. A model prompted
 to predict from it produces confident nonsense, and the failure is invisible
-to the founder — the worst kind. Deterministic arithmetic with visible inputs
+to the founder, the worst kind. Deterministic arithmetic with visible inputs
 is defensible; prediction is not.
 
 **Revisit if.** A customer accumulates 18+ months of clean data and asks for
@@ -48,7 +48,7 @@ it explicitly, with the limitation stated in the interface.
 
 ---
 
-## D4 — The Reviewer is a checklist, not a second model opinion.
+## D4: The Reviewer is a checklist, not a second model opinion.
 
 **Decision.** The Reviewer has no tools, no research ability, and no
 discretion. It checks stated rules and returns a verdict.
@@ -63,7 +63,7 @@ could be added alongside, but it does not gate.
 
 ---
 
-## D5 — Self-hosting and editable skills are the differentiator.
+## D5: Self-hosting and editable skills are the differentiator. Lead differentiator superseded by D10.
 
 **Decision.** Lead on data sovereignty and readable playbooks. Do not compete
 on onboarding polish or voice UX.
@@ -79,11 +79,11 @@ playbooks. Then the differentiator is gone and the product needs a new one.
 
 ---
 
-## D6 — Add a fourth team: Design. Supersedes D1's team count, not its reasoning.
+## D6: Add a fourth team: Design. Supersedes D1's team count, not its reasoning.
 
 **Decision.** Four teams, not three: Growth, Technical, Finance, Design.
-Design covers product design for the founder's own product — software
-interface or physical object — plus brand and visual identity. A fifth
+Design covers product design for the founder's own product (software
+interface or physical object) plus brand and visual identity. A fifth
 Hermes process, its own `skills/design/` folder, its own `review_rubric`
 section.
 
@@ -93,21 +93,21 @@ rather than a team. That reasoning does not apply to design: design
 direction and critique are `auto`-or-`approve` tier work like every other
 team's output, never blocked. A founder building a product needs a design
 point of view as much as a technical or financial one, and folding it into
-Technical conflates two different kinds of judgment — Technical scopes and
+Technical conflates two different kinds of judgment: Technical scopes and
 builds, Design directs how something looks, works, or is experienced. Kept
 separate, the same way pricing splits into Finance computing the number and
 Growth communicating it.
 
 **Revisit if.** In practice most work orders routed to Design turn out to
 need no more than a paragraph a founder could get from Technical or Growth
-directly — i.e., the discipline does not carry enough distinct judgment to
+directly, i.e., the discipline does not carry enough distinct judgment to
 justify its own instance and skill folder.
 
 ---
 
 ## D7: One install per founder. No shared, multi-company hosting. Superseded by D8.
 
-**Decision.** Each founder runs their own copy of Founders Corps, with its
+**Decision.** Each founder runs their own copy of Aloft, with its
 own database and its own `skills/` folder. One install holds exactly one
 company: `company_brain` stays a single row. A second founder gets a second
 install, not an account on the first one.
@@ -126,7 +126,7 @@ decision and its own security review.
 
 ---
 
-## D8: Many companies per install. Supersedes D7. Lobby and company passcodes superseded by D9.
+## D8: Many companies per install. Supersedes D7. Lobby and company passcodes superseded by D9. Public hosting reopened by D10.
 
 **Decision.** One install can hold many companies. `/` is a lobby listing
 them; each company has its own passcode and its own database folder
@@ -170,3 +170,35 @@ through an outside provider.
 **Revisit if.** The install is put on the public internet (needs HTTPS,
 rate limiting at the edge, email verification and a security review), or
 founders ask to share a company with a co-founder (add invitations).
+
+---
+
+## D10: All four teams stay. Everything a founder needs, in one place. Supersedes D5's lead differentiator.
+
+**Decision.** The product's aim is to give a founder everything they need
+in one place. Growth, Technical, Finance and Design all stay and all ship
+working at a basic level; depth comes one team per cycle (skills,
+connectors, evals), never by cutting a team. The lead differentiator is
+one company shared by every team: one `company_brain`, one decision log,
+one approval inbox, one set of receipts, and contradictions between teams
+surfaced. Trust (approval tiers, blocked actions, receipts, arithmetic
+shown, refusal on thin data) is the second. Editable playbooks stay a
+differentiator, compatible with the Claude Skills format. The product
+offers two doors: hosted, and self-hosted with any model key. The
+limitations and how each is overcome are in PRODUCT.md; the build order is
+in ROADMAP.md.
+
+**Reasoning.** A review of the market on 2026-10-07 found D5's revisit
+condition effectively met: Claude Skills use the same `SKILL.md` format,
+and the labs shipped agents with connectors and scheduled tasks, so
+editable playbooks alone no longer set us apart. Narrowing to one team
+(for example Finance only) was considered and rejected: Janvi's aim is the
+whole office, and the shared company across teams is the one thing a
+single assistant or a bundle of separate helpers cannot offer. Self-hosting
+only shuts out the non-technical founders who need the office most, and
+the accounts built for D9 already make a hosted door possible.
+
+**Revisit if.** After the eval harness exists, a team cannot reach a
+detection and refusal rate Janvi would defend within two depth cycles; or
+the labs ship shared memory and contradiction handling across functions
+for one company, which would take the lead differentiator away.
