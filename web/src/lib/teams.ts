@@ -22,15 +22,17 @@ export const TEAM_ROLE: Record<string, string> = {
   technical: "Product and engineering",
   finance: "Runway, burn, unit economics",
   design: "Product design and brand identity",
+  reviewer: "Checks every draft against the rubric. No tools, no opinions.",
 };
 
 // Instance -> playbooks synced into it (scripts/_profiles.py).
 export const INSTANCE_PLAYBOOKS: Record<string, string[]> = {
-  orchestrator: ["business_rules", "review_rubric", "orchestrator/planning"],
+  orchestrator: ["business_rules", "orchestrator/planning"],
   growth: ["business_rules", "growth/outreach_draft", "growth/positioning_check"],
   technical: ["business_rules", "technical/scope_mvp"],
   finance: ["business_rules", "finance/runway_tracker"],
   design: ["business_rules", "design/product_design_direction", "design/brand_identity"],
+  reviewer: ["business_rules", "review_rubric"],
 };
 
 export function instancesUsing(playbook: string): string[] {
