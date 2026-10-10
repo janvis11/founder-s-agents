@@ -25,7 +25,6 @@ import { addCompany, getCompany, listCompanies, renameCompany } from "@/lib/comp
 import { checkOldPasscode, retireOldPasscode } from "@/lib/lock";
 import { COMPANY_COOKIE, COOKIE_OPTIONS, SESSION_COOKIE, issueToken, readToken } from "@/lib/session";
 import { currentCompany, query, queryFor } from "@/lib/sql";
-import { sendToOrchestrator } from "@/lib/gateway";
 import { readPlaybook, writePlaybook } from "@/lib/playbooks";
 import type { CompanyBrain, Decision, Draft } from "@/lib/db";
 import { teamLabel } from "@/lib/teams";
@@ -271,20 +270,12 @@ export async function sendBrief(_prev: FormState, form: FormData): Promise<FormS
   const body = text(form, "body");
   if (!body) return { error: "Write the brief first." };
 
+  // Saved only. harness/runner.py picks it up, has the Orchestrator plan it,
+  // runs the teams and the Reviewer, and writes the answer back here.
   const [brief] = (await query("insert into briefs (body) values ($1) returning id", [body])) as { id: number }[];
   await receipt("brief", `Sent brief ${brief.id} to the Orchestrator`, { inputs: { brief_id: brief.id } });
-
-  const result = await sendToOrchestrator(body);
-  if (result.ok) {
-    await query("update briefs set status = 'answered', response = $2, answered_at = now() where id = $1", [
-      brief.id,
-      result.content,
-    ]);
-  } else {
-    await query("update briefs set status = 'broken', error = $2 where id = $1", [brief.id, result.error]);
-  }
   refreshAll();
-  return result.ok ? { ok: true, message: `Brief ${brief.id} answered.` } : { error: result.error };
+  return { ok: true, message: `Brief ${brief.id} sent. The Orchestrator picks it up next.` };
 }
 
 // Approvals -----------------------------------------------------------------

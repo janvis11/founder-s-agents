@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { query as run } from "./sql";
 import type { Tier } from "./teams";
 
-export type WorkOrderStatus = "pending" | "in_progress" | "done" | "bounced" | "escalated";
+export type WorkOrderStatus = "pending" | "in_progress" | "done" | "bounced" | "escalated" | "stopped";
 
 export type WorkOrder = {
   id: string;
@@ -68,7 +68,7 @@ export type Receipt = {
 export type Brief = {
   id: number;
   body: string;
-  status: "sent" | "answered" | "broken";
+  status: "sent" | "working" | "answered" | "broken" | "stopped";
   response: string | null;
   error: string | null;
   created_at: Date;

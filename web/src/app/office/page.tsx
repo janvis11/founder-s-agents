@@ -126,6 +126,9 @@ export default async function Home() {
 
           <section aria-labelledby="work-orders">
             <h2 className="section-title" id="work-orders">
+                    {b.status === "working" && (
+                      <span className="brief-answer">{b.response ?? "The teams are on it."}</span>
+                    )}
               Work orders <span className="count">{orders.length}</span>
             </h2>
             {orders.length ? (

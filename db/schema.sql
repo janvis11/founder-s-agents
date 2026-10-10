@@ -68,12 +68,13 @@ on conflict (id) do nothing;
 
 -- Design is the fourth team (DECISIONS.md D6); the original check predates it.
 -- Escalated = bounced twice, now with the founder (review_rubric).
+-- Stopped = the founder stopped it from the dashboard; the runner drops it.
 alter table work_orders drop constraint if exists work_orders_team_check;
 alter table work_orders add constraint work_orders_team_check
     check (team in ('growth', 'technical', 'finance', 'design'));
 alter table work_orders drop constraint if exists work_orders_status_check;
 alter table work_orders add constraint work_orders_status_check
-    check (status in ('pending', 'in_progress', 'done', 'bounced', 'escalated'));
+    check (status in ('pending', 'in_progress', 'done', 'bounced', 'escalated', 'stopped'));
 
 -- A founder message sent to the Orchestrator from the dashboard.
 create table if not exists briefs (
@@ -114,3 +115,39 @@ create table if not exists playbook_amendments (
 -- A contradiction stays on the desk until the founder records a decision on
 -- it. Never auto-resolved.
 alter table drafts add column if not exists contradiction_resolved_at timestamptz;
+
+-- harness/runner.py marks a brief working once the Orchestrator has planned
+-- it, until every work order is in and the Orchestrator has answered.
+-- Stopped = the founder stopped it, with all its unfinished work orders.
+alter table briefs drop constraint if exists briefs_status_check;
+alter table briefs add constraint briefs_status_check
+    check (status in ('sent', 'working', 'answered', 'broken', 'stopped'));
+
+-- What the agents are doing, one row per step, written by harness/runner.py:
+-- running while an agent works, then done, failed or stopped. `detail`
+-- carries what went wrong or what the model is doing about it, in plain
+-- words. The dashboard's live bar and Activity page read it.
+create table if not exists activity (
+    id serial primary key,
+    brief_id integer references briefs(id),
+    work_order_id text references work_orders(id),
+    draft_id integer references drafts(id),
+    agent text not null,
+    action text not null,
+    model text,
+    status text not null default 'running'
+        check (status in ('running', 'done', 'failed', 'stopped')),
+    detail text,
+    started_at timestamptz not null default now(),
+    finished_at timestamptz
+);
+create index if not exists activity_started_idx on activity (started_at desc);
+
+-- The office's switch: while paused, the runner starts no new work for this
+-- company. Exactly one row.
+create table if not exists office_state (
+    id integer primary key default 1 check (id = 1),
+    paused boolean not null default false,
+    paused_at timestamptz
+);
+insert into office_state (id) values (1) on conflict (id) do nothing;
