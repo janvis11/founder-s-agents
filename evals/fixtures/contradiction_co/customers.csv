@@ -1,0 +1,15 @@
+row,customer_id,company_employees,role,plan,signup_month,source
+1,C-001,1,founder,Solo $29,2026-07,Product Hunt
+2,C-002,1,freelance consultant,Solo $29,2026-07,Indie Hackers
+3,C-003,2,founder,Solo $29,2026-07,Google
+4,C-004,1,founder,Solo $29,2026-07,Product Hunt
+5,C-005,3,agency owner,Solo $29,2026-07,Google
+6,C-006,1,freelance consultant,Solo $29,2026-07,Indie Hackers
+7,C-007,1,founder,Solo $29,2026-07,Google
+8,C-008,2,founder,Solo $29,2026-07,Product Hunt
+9,C-009,1,freelance consultant,Solo $29,2026-08,Google
+10,C-010,5,agency owner,Solo $29,2026-08,Google
+11,C-011,1,founder,Solo $29,2026-08,Indie Hackers
+12,C-012,1,founder,Solo $29,2026-09,Google
+13,C-013,2,founder,Solo $29,2026-09,Product Hunt
+14,C-014,1,freelance consultant,Solo $29,2026-09,Google

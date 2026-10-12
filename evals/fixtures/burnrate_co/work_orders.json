@@ -1,0 +1,49 @@
+[
+  {
+    "team": "finance",
+    "skill": "runway_tracker",
+    "tier": "auto",
+    "summary": "Work out burn, runway and the biggest money risks from the last six months",
+    "inputs": {
+      "cash_on_hand": {
+        "amount_usd": 78000,
+        "as_of": "2026-09-30"
+      }
+    },
+    "datasets": [
+      "expenses.csv",
+      "revenue.csv"
+    ],
+    "acceptance_criteria": [
+      "Every figure shows its formula and inputs",
+      "Three labelled scenarios",
+      "Structural flags listed with the rows behind them"
+    ]
+  },
+  {
+    "team": "growth",
+    "skill": "positioning_check",
+    "tier": "approve",
+    "summary": "Check whether our positioning holds up against our customers and numbers",
+    "inputs": {},
+    "datasets": [
+      "revenue.csv"
+    ],
+    "acceptance_criteria": [
+      "Every positioning claim classified evidenced, assumed or contradicted",
+      "The single weakest claim and the cheapest test for it"
+    ]
+  },
+  {
+    "team": "technical",
+    "skill": "scope_mvp",
+    "tier": "auto",
+    "summary": "Scope QuickBooks two-way sync: invoices, payments and clients kept in sync both ways, with conflict handling",
+    "inputs": {},
+    "datasets": [],
+    "acceptance_criteria": [
+      "Thinnest, working and full scopes in founder-hours with assumptions",
+      "A recommendation checked against the founder's hours"
+    ]
+  }
+]

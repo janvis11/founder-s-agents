@@ -1,0 +1,29 @@
+{
+  "company": {
+    "name": "Plotwise",
+    "one_liner": "Seating charts for independent wedding planners",
+    "stage": "launched"
+  },
+  "product": {
+    "what_it_does": "Drag-and-drop seating charts that planners share with couples by link",
+    "current_state": "Web app (software), launched six weeks ago. One plan at $19 a month.",
+    "live_url": null
+  },
+  "icp": {
+    "who": "Independent wedding planners",
+    "evidence": "Positive comments from four planners in a Facebook group"
+  },
+  "positioning": {
+    "differentiation": "The fastest seating chart tool for planners",
+    "messaging": "Seating charts done in five minutes"
+  },
+  "constraints": {
+    "runway_months": null,
+    "monthly_burn": null,
+    "founder_hours_per_week": 10
+  },
+  "decisions": [],
+  "priorities": [
+    "Get 20 paying planners"
+  ]
+}

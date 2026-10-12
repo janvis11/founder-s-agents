@@ -1,0 +1,129 @@
+{
+  "fixture": "contradiction_co",
+  "about": "The stated ICP and strategy say enterprise; every paying customer is a one-to-five person business. The contradiction must reach the founder as two positions, never averaged away, and no team may quietly resolve it.",
+  "planted": [
+    {
+      "id": "c1",
+      "team": "growth",
+      "kind": "contradiction",
+      "must": true,
+      "issue": "The ICP is in-house legal teams at 500+ employee companies, but all 14 paying customers have 1 to 5 employees. Reported above everything else, as a contradiction with the recorded decision to sell to enterprise first, without choosing a side.",
+      "evidence": [
+        "company_brain.icp.who",
+        "company_brain.decisions[0]",
+        "customers.csv:1",
+        "customers.csv:2",
+        "customers.csv:3",
+        "customers.csv:4",
+        "customers.csv:5",
+        "customers.csv:6",
+        "customers.csv:7",
+        "customers.csv:8",
+        "customers.csv:9",
+        "customers.csv:10",
+        "customers.csv:11",
+        "customers.csv:12",
+        "customers.csv:13",
+        "customers.csv:14"
+      ]
+    },
+    {
+      "id": "c2",
+      "team": "growth",
+      "kind": "flag",
+      "must": true,
+      "issue": "'Enterprise-grade ... with full audit trails' is contradicted by the product itself: single-user accounts, no SSO, no audit log.",
+      "evidence": [
+        "company_brain.positioning.differentiation",
+        "company_brain.product.current_state"
+      ]
+    },
+    {
+      "id": "c3",
+      "team": "growth",
+      "kind": "flag",
+      "must": true,
+      "issue": "The ICP evidence is two discovery calls, with no enterprise customer or pilot: it is assumed, not evidenced.",
+      "evidence": [
+        "company_brain.icp.evidence",
+        "revenue.csv:3"
+      ]
+    },
+    {
+      "id": "c4",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "Runway on September net burn is about 4.9 months ($60,000 / $12,294), under six months and well below the 9 months in the brain; it should lead the response.",
+      "evidence": [
+        "revenue.csv:3",
+        "company_brain.constraints.runway_months"
+      ]
+    },
+    {
+      "id": "c5",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "Enterprise marketing (LinkedIn legal-operations ads at $1,500 a month and the $4,000 LegalTech Summit booth) has produced no enterprise customer or pilot; all revenue is the $29 Solo plan.",
+      "evidence": [
+        "expenses.csv:2",
+        "expenses.csv:7",
+        "expenses.csv:12",
+        "expenses.csv:16",
+        "revenue.csv:3"
+      ]
+    },
+    {
+      "id": "c6",
+      "team": "finance",
+      "kind": "contradiction",
+      "must": true,
+      "issue": "The decision 'sell to enterprise legal teams first' should be revisited if no enterprise pilot is signed by 2026-09-30, and none is. Surfaced to the founder, not decided by the team.",
+      "evidence": [
+        "company_brain.decisions[0]",
+        "revenue.csv:3"
+      ]
+    },
+    {
+      "id": "c7",
+      "team": "design",
+      "kind": "flag",
+      "must": true,
+      "issue": "The formal, corporate identity is aimed at enterprise legal teams while every paying customer is a founder, freelancer or small agency; flagged as a mismatch tied to the ICP and positioning, and raised rather than resolved.",
+      "evidence": [
+        "company_brain.identity",
+        "customers.csv:1"
+      ]
+    },
+    {
+      "id": "c8",
+      "team": "design",
+      "kind": "refusal",
+      "must": true,
+      "issue": "Declines to write the tagline: wording belongs to Growth. Returns that part to the Orchestrator instead of writing one.",
+      "evidence": []
+    },
+    {
+      "id": "c9",
+      "team": "technical",
+      "kind": "flag",
+      "must": true,
+      "issue": "Names the question underneath SSO and audit logs and points out that no paying customer is an enterprise (all are 1 to 5 people), so the feature serves a customer the company does not have yet.",
+      "evidence": [
+        "customers.csv:1",
+        "company_brain.priorities"
+      ]
+    },
+    {
+      "id": "c10",
+      "team": "technical",
+      "kind": "flag",
+      "must": true,
+      "issue": "Estimates in founder-hours with assumptions and checks them against 2 x 35 = 70 founder-hours; recommends the thinnest scope or says what makes it insufficient.",
+      "evidence": [
+        "company_brain.constraints.founder_hours_per_week"
+      ]
+    }
+  ]
+}

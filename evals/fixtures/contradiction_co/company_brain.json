@@ -1,0 +1,43 @@
+{
+  "company": {
+    "name": "Clauseboard",
+    "one_liner": "Contract review for enterprise legal teams",
+    "stage": "revenue"
+  },
+  "product": {
+    "what_it_does": "Highlights risky clauses in uploaded contracts and writes plain-English summaries",
+    "current_state": "Web app (software). Single-user accounts only: no SSO, no audit log, no team workspaces.",
+    "live_url": null
+  },
+  "icp": {
+    "who": "In-house legal teams at companies with 500+ employees",
+    "evidence": "Two discovery calls with enterprise legal operations leads in May 2026"
+  },
+  "positioning": {
+    "differentiation": "Enterprise-grade contract review with full audit trails",
+    "messaging": "The contract review platform enterprise legal teams trust"
+  },
+  "constraints": {
+    "runway_months": 9,
+    "monthly_burn": 11000,
+    "founder_hours_per_week": 35
+  },
+  "decisions": [
+    {
+      "decision": "Sell to enterprise legal teams first",
+      "reasoning": "Larger contracts and dedicated legal budgets",
+      "date": "2026-05-20",
+      "revisit_if": "No enterprise pilot signed by 2026-09-30"
+    }
+  ],
+  "priorities": [
+    "Sign the first enterprise pilot",
+    "Launch SSO",
+    "Reach $5k MRR"
+  ],
+  "identity": {
+    "colors": "Navy and gold",
+    "type": "Formal serif throughout",
+    "tone": "Formal, authoritative, corporate"
+  }
+}

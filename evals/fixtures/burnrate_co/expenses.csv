@@ -1,0 +1,57 @@
+row,month,vendor,category,amount_usd,fixed_or_variable
+1,2026-04,Studio Nine (contract developer),engineering,9000,fixed
+2,2026-04,AWS,hosting,2100,variable
+3,2026-04,Google Ads,marketing,1500,variable
+4,2026-04,Intercom,support,450,fixed
+5,2026-04,Postmark,email delivery,310,variable
+6,2026-04,Figma,tools,75,fixed
+7,2026-04,Slack,tools,120,fixed
+8,2026-04,Google Workspace,tools,72,fixed
+9,2026-04,Brightline CPA,professional services,400,fixed
+10,2026-05,Studio Nine (contract developer),engineering,9000,fixed
+11,2026-05,AWS,hosting,2550,variable
+12,2026-05,Google Ads,marketing,1900,variable
+13,2026-05,Intercom,support,450,fixed
+14,2026-05,Postmark,email delivery,330,variable
+15,2026-05,Figma,tools,75,fixed
+16,2026-05,Slack,tools,120,fixed
+17,2026-05,Google Workspace,tools,72,fixed
+18,2026-05,Brightline CPA,professional services,400,fixed
+19,2026-06,Studio Nine (contract developer),engineering,9000,fixed
+20,2026-06,AWS,hosting,3100,variable
+21,2026-06,Google Ads,marketing,2500,variable
+22,2026-06,Intercom,support,450,fixed
+23,2026-06,Postmark,email delivery,350,variable
+24,2026-06,Figma,tools,75,fixed
+25,2026-06,Slack,tools,120,fixed
+26,2026-06,Google Workspace,tools,72,fixed
+27,2026-06,Brightline CPA,professional services,400,fixed
+28,2026-06,Hiscox business insurance (annual premium),insurance,3600,one-off
+29,2026-07,Studio Nine (contract developer),engineering,9000,fixed
+30,2026-07,AWS,hosting,3750,variable
+31,2026-07,Google Ads,marketing,3200,variable
+32,2026-07,Intercom,support,450,fixed
+33,2026-07,Postmark,email delivery,370,variable
+34,2026-07,Figma,tools,75,fixed
+35,2026-07,Slack,tools,120,fixed
+36,2026-07,Google Workspace,tools,72,fixed
+37,2026-07,Brightline CPA,professional services,400,fixed
+38,2026-08,Studio Nine (contract developer),engineering,9000,fixed
+39,2026-08,AWS,hosting,4500,variable
+40,2026-08,Google Ads,marketing,4100,variable
+41,2026-08,Intercom,support,450,fixed
+42,2026-08,Postmark,email delivery,390,variable
+43,2026-08,Figma,tools,75,fixed
+44,2026-08,Slack,tools,120,fixed
+45,2026-08,Google Workspace,tools,72,fixed
+46,2026-08,Brightline CPA,professional services,400,fixed
+47,2026-08,Intercom,support,450,fixed
+48,2026-09,Studio Nine (contract developer),engineering,9000,fixed
+49,2026-09,AWS,hosting,5400,variable
+50,2026-09,Google Ads,marketing,5200,variable
+51,2026-09,Intercom,support,450,fixed
+52,2026-09,Postmark,email delivery,410,variable
+53,2026-09,Figma,tools,75,fixed
+54,2026-09,Slack,tools,120,fixed
+55,2026-09,Google Workspace,tools,72,fixed
+56,2026-09,Brightline CPA,professional services,400,fixed

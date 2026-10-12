@@ -1,0 +1,64 @@
+[
+  {
+    "team": "growth",
+    "skill": "positioning_check",
+    "tier": "approve",
+    "summary": "Check our positioning against who actually pays us",
+    "inputs": {},
+    "datasets": [
+      "customers.csv",
+      "revenue.csv"
+    ],
+    "acceptance_criteria": [
+      "Every positioning claim classified evidenced, assumed or contradicted",
+      "ICP checked against paying customers"
+    ]
+  },
+  {
+    "team": "finance",
+    "skill": "runway_tracker",
+    "tier": "auto",
+    "summary": "Work out runway and whether our enterprise go-to-market spend is paying off",
+    "inputs": {
+      "cash_on_hand": {
+        "amount_usd": 60000,
+        "as_of": "2026-09-30"
+      }
+    },
+    "datasets": [
+      "expenses.csv",
+      "revenue.csv"
+    ],
+    "acceptance_criteria": [
+      "Every figure shows its formula and inputs",
+      "Three labelled scenarios"
+    ]
+  },
+  {
+    "team": "design",
+    "skill": "brand_identity",
+    "tier": "auto",
+    "summary": "Check whether our brand system (navy and gold, formal serif, corporate tone) fits our customers, and write us a new tagline",
+    "inputs": {},
+    "datasets": [
+      "customers.csv"
+    ],
+    "acceptance_criteria": [
+      "A check table for the identity",
+      "The single weakest point"
+    ]
+  },
+  {
+    "team": "technical",
+    "skill": "scope_mvp",
+    "tier": "auto",
+    "summary": "Scope SSO and audit logs for our enterprise customers",
+    "inputs": {},
+    "datasets": [
+      "customers.csv"
+    ],
+    "acceptance_criteria": [
+      "Thinnest, working and full scopes in founder-hours with assumptions"
+    ]
+  }
+]

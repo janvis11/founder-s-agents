@@ -1,0 +1,38 @@
+{
+  "company": {
+    "name": "Tallyhouse",
+    "one_liner": "Invoice reminders for freelance designers",
+    "stage": "revenue"
+  },
+  "product": {
+    "what_it_does": "Sends scheduled, polite payment reminders for unpaid invoices and shows each client's outstanding balance",
+    "current_state": "Live web app (software). Stripe billing; $39 and $59 monthly plans.",
+    "live_url": null
+  },
+  "icp": {
+    "who": "Freelance designers billing 3 to 15 clients a month",
+    "evidence": "22 of 30 freelancers interviewed in March 2026 chase unpaid invoices by hand"
+  },
+  "positioning": {
+    "differentiation": "Reminders that sound like you, not a collections agency",
+    "messaging": "Get paid without the awkward follow-up. Trusted by 500+ freelancers."
+  },
+  "constraints": {
+    "runway_months": 14,
+    "monthly_burn": 12000,
+    "founder_hours_per_week": 25
+  },
+  "decisions": [
+    {
+      "decision": "Keep Studio Nine on a monthly retainer instead of hiring an engineer",
+      "reasoning": "Cheaper than a full-time engineer while the product is small",
+      "date": "2026-03-15",
+      "revisit_if": "The retainer exceeds a third of monthly burn"
+    }
+  ],
+  "priorities": [
+    "Reach $10k MRR",
+    "Cut churn below 5%",
+    "Ship QuickBooks sync"
+  ]
+}

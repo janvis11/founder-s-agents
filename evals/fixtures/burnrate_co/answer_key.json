@@ -1,0 +1,169 @@
+{
+  "fixture": "burnrate_co",
+  "about": "Six months of healthy, complete data with several real money problems, a stale company brain, and a recorded decision whose revisit condition is now met.",
+  "planted": [
+    {
+      "id": "f1",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "Studio Nine is 42.6% of September gross burn ($9,000 of $21,127), above the 20% single-vendor threshold.",
+      "evidence": [
+        "expenses.csv:48"
+      ]
+    },
+    {
+      "id": "f2",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "AWS grows about 20% a month ($2,100 to $5,400) while MRR grows about 1% a month: a cost growing faster than revenue.",
+      "evidence": [
+        "expenses.csv:2",
+        "expenses.csv:11",
+        "expenses.csv:20",
+        "expenses.csv:30",
+        "expenses.csv:39",
+        "expenses.csv:49",
+        "revenue.csv:5",
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "f3",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "June's 32% jump in burn is the one-off annual insurance premium ($3,600); it should be treated as a one-off (about $300 a month), not as a burn trend.",
+      "evidence": [
+        "expenses.csv:28"
+      ]
+    },
+    {
+      "id": "f4",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "Runway on September net burn is about 5.5 months ($78,000 / $14,237), under six months, and should lead the response.",
+      "evidence": [
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "f5",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "The company brain is stale: it says 14 months of runway and $12,000 monthly burn; September gross burn is $21,127 and net burn $14,237.",
+      "evidence": [
+        "company_brain.constraints.runway_months",
+        "company_brain.constraints.monthly_burn"
+      ]
+    },
+    {
+      "id": "f6",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "Intercom is charged twice in August ($450 each), likely a duplicate charge.",
+      "evidence": [
+        "expenses.csv:41",
+        "expenses.csv:47"
+      ]
+    },
+    {
+      "id": "f7",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "Google Ads spend rose 3.5x ($1,500 to $5,200) while new customers fell from 19 to 14: ad cost per new customer rose from about $79 to about $371.",
+      "evidence": [
+        "expenses.csv:3",
+        "expenses.csv:50",
+        "revenue.csv:1",
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "f8",
+      "team": "finance",
+      "kind": "flag",
+      "must": false,
+      "issue": "Monthly churn doubled from 3.8% to 7.5%, against the priority to cut churn below 5%.",
+      "evidence": [
+        "revenue.csv:1",
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "f9",
+      "team": "finance",
+      "kind": "contradiction",
+      "must": true,
+      "issue": "The recorded decision to keep Studio Nine on retainer should be revisited 'if the retainer exceeds a third of monthly burn', and it now does. The team should surface this to the founder, not decide it.",
+      "evidence": [
+        "company_brain.decisions[0]",
+        "expenses.csv:48"
+      ]
+    },
+    {
+      "id": "g1",
+      "team": "growth",
+      "kind": "flag",
+      "must": true,
+      "issue": "'Trusted by 500+ freelancers' is contradicted by the data: 173 active customers in September.",
+      "evidence": [
+        "company_brain.positioning.messaging",
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "g2",
+      "team": "growth",
+      "kind": "flag",
+      "must": true,
+      "issue": "The differentiation 'reminders that sound like you' has no supporting evidence in the brain or data; it is assumed, not evidenced.",
+      "evidence": [
+        "company_brain.positioning.differentiation"
+      ]
+    },
+    {
+      "id": "g3",
+      "team": "growth",
+      "kind": "flag",
+      "must": false,
+      "issue": "Churn rising to 7.5% a month is weak evidence that the promised outcome is being delivered.",
+      "evidence": [
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "t1",
+      "team": "technical",
+      "kind": "flag",
+      "must": true,
+      "issue": "Full two-way sync with conflict handling is beyond two weeks of the founder's time (2 x 25 = 50 founder-hours) and must not be the recommendation; a thinner scope (for example a one-way export) is recommended instead.",
+      "evidence": [
+        "company_brain.constraints.founder_hours_per_week"
+      ]
+    },
+    {
+      "id": "t2",
+      "team": "technical",
+      "kind": "flag",
+      "must": true,
+      "issue": "Estimates are given in founder-hours, each with its assumptions stated (not days or weeks, not bare numbers).",
+      "evidence": []
+    },
+    {
+      "id": "t3",
+      "team": "technical",
+      "kind": "flag",
+      "must": true,
+      "issue": "Names the question the feature is meant to answer (whether customers need accounting sync at all) and notes nothing in the brain or data shows customers asking for it.",
+      "evidence": [
+        "company_brain.priorities"
+      ]
+    }
+  ]
+}

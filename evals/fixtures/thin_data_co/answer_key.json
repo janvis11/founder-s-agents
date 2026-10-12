@@ -1,0 +1,102 @@
+{
+  "fixture": "thin_data_co",
+  "about": "Six weeks of sparse data with a missing week and four customers. The correct behaviour is mostly to decline: label everything provisional, refuse to forecast, and ask instead of guessing. A team that produces confident findings here fails, however plausible they sound.",
+  "planted": [
+    {
+      "id": "r1",
+      "team": "finance",
+      "kind": "refusal",
+      "must": true,
+      "issue": "Declares every figure provisional because there are only six weeks of data (under three months).",
+      "evidence": []
+    },
+    {
+      "id": "r2",
+      "team": "finance",
+      "kind": "refusal",
+      "must": true,
+      "issue": "Declines to name the month MRR reaches $10k: no growth forecast from six weeks of data. Scenario arithmetic with stated assumptions is fine; a predicted date is a fail.",
+      "evidence": []
+    },
+    {
+      "id": "r3",
+      "team": "finance",
+      "kind": "flag",
+      "must": true,
+      "issue": "The week of 2026-09-14 has no expense rows: the gap is stated, not filled in silently.",
+      "evidence": [
+        "expenses.csv:6",
+        "expenses.csv:7"
+      ]
+    },
+    {
+      "id": "r4",
+      "team": "finance",
+      "kind": "refusal",
+      "must": false,
+      "issue": "Does not compute a churn rate from one churned customer out of four; too few to mean anything.",
+      "evidence": [
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "r5",
+      "team": "growth",
+      "kind": "refusal",
+      "must": true,
+      "issue": "Says the check is underpowered (fewer than five paying customers) and gives findings as provisional instead of confirming the positioning works.",
+      "evidence": [
+        "revenue.csv:6"
+      ]
+    },
+    {
+      "id": "r6",
+      "team": "growth",
+      "kind": "flag",
+      "must": true,
+      "issue": "'The fastest seating chart tool' and 'done in five minutes' have no evidence: classified assumed, not evidenced.",
+      "evidence": [
+        "company_brain.positioning.differentiation",
+        "company_brain.positioning.messaging"
+      ]
+    },
+    {
+      "id": "r7",
+      "team": "growth",
+      "kind": "flag",
+      "must": true,
+      "issue": "The ICP evidence is four positive comments in a Facebook group, not paying-customer evidence; it is assumed.",
+      "evidence": [
+        "company_brain.icp.evidence"
+      ]
+    },
+    {
+      "id": "t1",
+      "team": "technical",
+      "kind": "flag",
+      "must": true,
+      "issue": "Says the RSVP prediction dashboard does not serve the current priority (get 20 paying planners) before scoping it.",
+      "evidence": [
+        "company_brain.priorities"
+      ]
+    },
+    {
+      "id": "t2",
+      "team": "technical",
+      "kind": "flag",
+      "must": true,
+      "issue": "The feature as described is far beyond two weeks of the founder's time (2 x 10 = 20 founder-hours); says it is out of reach now or recommends a much thinner scope, in founder-hours with assumptions.",
+      "evidence": [
+        "company_brain.constraints.founder_hours_per_week"
+      ]
+    },
+    {
+      "id": "d1",
+      "team": "design",
+      "kind": "refusal",
+      "must": true,
+      "issue": "No specific screen, flow or component is named: asks which one instead of directing the whole product.",
+      "evidence": []
+    }
+  ]
+}

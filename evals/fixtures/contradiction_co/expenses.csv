@@ -1,0 +1,17 @@
+row,month,vendor,category,amount_usd
+1,2026-07,Marlow Dev (contract developer),engineering,6000
+2,2026-07,LinkedIn ads (legal operations audience),marketing,1500
+3,2026-07,Render,hosting,400
+4,2026-07,OpenAI API,model usage,600
+5,2026-07,"Notion, Slack, Google Workspace",tools,200
+6,2026-08,Marlow Dev (contract developer),engineering,6000
+7,2026-08,LinkedIn ads (legal operations audience),marketing,1500
+8,2026-08,Render,hosting,400
+9,2026-08,OpenAI API,model usage,600
+10,2026-08,"Notion, Slack, Google Workspace",tools,200
+11,2026-09,Marlow Dev (contract developer),engineering,6000
+12,2026-09,LinkedIn ads (legal operations audience),marketing,1500
+13,2026-09,Render,hosting,400
+14,2026-09,OpenAI API,model usage,600
+15,2026-09,"Notion, Slack, Google Workspace",tools,200
+16,2026-09,LegalTech Summit 2026 booth,marketing (event),4000

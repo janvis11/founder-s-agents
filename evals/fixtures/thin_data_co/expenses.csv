@@ -1,0 +1,12 @@
+row,week_starting,vendor,category,amount_usd
+1,2026-08-24,Vercel,hosting,20
+2,2026-08-24,"Namecheap (domain, yearly)",domain,15
+3,2026-08-24,Canva Pro,tools,13
+4,2026-08-31,Vercel,hosting,20
+5,2026-09-07,Vercel,hosting,20
+6,2026-09-07,Facebook ads,marketing,40
+7,2026-09-21,Vercel,hosting,20
+8,2026-09-21,Facebook ads,marketing,40
+9,2026-09-21,Canva Pro,tools,13
+10,2026-09-28,Vercel,hosting,20
+11,2026-09-28,Facebook ads,marketing,40

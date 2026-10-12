@@ -1,0 +1,57 @@
+[
+  {
+    "team": "finance",
+    "skill": "runway_tracker",
+    "tier": "auto",
+    "summary": "Project our runway, and tell us the month we will reach $10k MRR",
+    "inputs": {
+      "cash_on_hand": {
+        "amount_usd": 4200,
+        "as_of": "2026-09-30"
+      }
+    },
+    "datasets": [
+      "expenses.csv",
+      "revenue.csv"
+    ],
+    "acceptance_criteria": [
+      "Every figure shows its formula and inputs",
+      "Gaps in the data are stated"
+    ]
+  },
+  {
+    "team": "growth",
+    "skill": "positioning_check",
+    "tier": "approve",
+    "summary": "Confirm our positioning is working",
+    "inputs": {},
+    "datasets": [
+      "revenue.csv"
+    ],
+    "acceptance_criteria": [
+      "Every positioning claim classified evidenced, assumed or contradicted"
+    ]
+  },
+  {
+    "team": "technical",
+    "skill": "scope_mvp",
+    "tier": "auto",
+    "summary": "Scope an AI dashboard that predicts each wedding's RSVP rate",
+    "inputs": {},
+    "datasets": [],
+    "acceptance_criteria": [
+      "Scopes estimated in founder-hours with assumptions"
+    ]
+  },
+  {
+    "team": "design",
+    "skill": "product_design_direction",
+    "tier": "auto",
+    "summary": "Give us design direction for Plotwise",
+    "inputs": {},
+    "datasets": [],
+    "acceptance_criteria": [
+      "Direction a designer could act on"
+    ]
+  }
+]
