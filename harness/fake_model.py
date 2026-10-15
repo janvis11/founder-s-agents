@@ -14,6 +14,8 @@ the way an agent would, with one planted mistake so a bounce can be watched:
                         once the Reviewer's fixes arrive, it drops the word.
   Reviewer           -> fails G3 on "the best", passes everything else.
   Orchestrator answer-> a short plain summary.
+  Eval grader        -> marks the first planted item met, the rest missed,
+                        and one made-up extra flag (evals/run.py --offline).
 """
 
 import json
@@ -96,6 +98,14 @@ def answer(text: str) -> str:
             return json.dumps({"verdict": "fail", "failed_checks": ["G3"],
                                "required_fixes": ["Remove the unsubstantiated superlative 'the best'."]})
         return json.dumps({"verdict": "pass", "failed_checks": [], "required_fixes": []})
+    if "You are grading one draft" in text:
+        key = text.split("TEAM ===", 1)[-1].split("===", 1)[0]
+        ids = re.findall(r'"id": "([^"]+)"', key)
+        return json.dumps({
+            "items": [{"id": i, "met": n == 0, "quote": "scripted" if n == 0 else ""} for n, i in enumerate(ids)],
+            "extra_flags": [{"claim": "scripted extra claim", "supported": False, "why": "fake model"}],
+            "notes": "Scripted grade from the fake model.",
+        })
     if "The teams have finished" in text:
         return ("Finance could not compute runway yet because burn is missing; it says so. "
                 "Growth's positioning check passed review on its second attempt and waits on you in Approvals.")

@@ -185,8 +185,11 @@ class Watch:
             detail = explain(line)
             if detail and detail != self.last:
                 self.last = detail
-                note(self.conn, self.activity_id, detail)
+                self.note(detail)
                 say(f"{self.agent}: {detail}")
+
+    def note(self, detail: str) -> None:
+        note(self.conn, self.activity_id, detail)
 
 
 # --- Talking to the agents ---------------------------------------------------
@@ -281,7 +284,7 @@ def ask_json(role: str, message: str, watch: Watch) -> tuple[dict, dict]:
     try:
         return parse_json(text), usage
     except ValueError:
-        note(watch.conn, watch.activity_id, "The answer was not in the expected format; asking once more.")
+        watch.note("The answer was not in the expected format; asking once more.")
         retry = message + "\n\nYour previous reply was not a single valid JSON object. Reply again with only the JSON object."
         text, usage2 = ask(role, retry, watch)
         return parse_json(text), merge_usage(usage, usage2)
@@ -434,7 +437,7 @@ def _plan(conn, company: dict, brief: dict, watch: Watch) -> tuple[dict, dict]:
         problems = validate_plan(plan)
         if not problems:
             return plan, usage
-        note(conn, watch.activity_id, "The plan broke a rule (" + "; ".join(problems) + "). Asking for a fixed plan.")
+        watch.note("The plan broke a rule (" + "; ".join(problems) + "). Asking for a fixed plan.")
         message = base + "\n" + section("YOUR LAST PLAN WAS REJECTED. FIX THESE AND REPLY AGAIN", "\n".join(problems))
     raise AgentError("the Orchestrator's plan was invalid: " + "; ".join(problems))
 
@@ -491,6 +494,85 @@ REVIEW_CONTRACT = """Reply with one JSON object and nothing else:
 {"verdict": "pass" | "fail", "failed_checks": ["<check id>"], "required_fixes": ["<one concrete instruction per failed check>"]}"""
 
 
+def work_order_sections(wo: dict) -> list[str]:
+    """The work order, with any datasets laid out as their own sections."""
+    inputs = dict(wo["inputs"] or {})
+    datasets = inputs.pop("datasets", None) or {}
+    parts = [section(f"WORK ORDER {wo['id']}", {
+        "summary": wo["summary"], "skill": wo["skill"], "tier": wo["tier"],
+        "inputs": inputs, "acceptance_criteria": wo["acceptance_criteria"],
+    })]
+    for name, rows in datasets.items():
+        parts.append(section(f"DATASET {name} (cite rows as {name}:<row>)", rows))
+    return parts
+
+
+def team_message(company_name: str, wo: dict, brain: dict, *, upstream=None, previous=None,
+                 failures: int = 0) -> tuple[str, str]:
+    """What a team is sent for a work order, and a note for the activity line."""
+    team, path = wo["team"], skill_path(wo["team"], wo["skill"])
+    parts = [
+        f"You are the {label(team)} team at {company_name}. Do the work order below.",
+        section(f"YOUR PLAYBOOK: {path}", store.read_skill(path)),
+        section("BUSINESS RULES", store.read_skill("business_rules")),
+        section("COMPANY BRAIN", brain),
+        *work_order_sections(wo),
+    ]
+    if upstream:
+        parts.append(section("RESULTS OF EARLIER WORK ORDERS THIS ONE DEPENDS ON", upstream))
+    redo = ""
+    if previous and previous.get("founder_decision") == "declined":
+        redo = " (revising after you declined it)"
+        parts.append(section("THE FOUNDER DECLINED YOUR LAST DRAFT. THEIR NOTE",
+                             previous.get("decision_note") or "(no note)"))
+        parts.append(section("YOUR DECLINED DRAFT", previous["content"]))
+    elif previous and previous.get("verdict") == "fail":
+        redo = f" (attempt {failures + 1}, fixing what the Reviewer found)"
+        parts.append(section("THE REVIEWER FAILED YOUR LAST DRAFT. REQUIRED FIXES", previous["required_fixes"]))
+        parts.append(section("YOUR FAILED DRAFT", previous["content"]))
+    parts.append(section("HOW TO ANSWER", DRAFT_CONTRACT))
+    return "\n".join(parts), redo
+
+
+def review_message(company_name: str, wo: dict, brain: dict, draft: dict) -> str:
+    """What the Reviewer is sent for one draft."""
+    return "\n".join([
+        f"You are the Reviewer for {company_name}. Check the draft below. You have no tools.",
+        section("YOUR RUBRIC: review_rubric", store.read_skill("review_rubric")),
+        section("BUSINESS RULES", store.read_skill("business_rules")),
+        section("COMPANY BRAIN", brain),
+        section(f"CHECKING {wo['team']}, {wo['skill']}, tier {wo['tier']}", "The work order and its data follow."),
+        *work_order_sections(wo),
+        section("DRAFT", {"tier": draft["tier"], "summary": draft["summary"],
+                          "content": draft["content"], "contradiction": draft["contradiction"]}),
+        section("HOW TO ANSWER", REVIEW_CONTRACT),
+    ])
+
+
+def split_draft(content: dict, fallback_summary: str) -> tuple[dict, dict | None, str]:
+    """A team's answer as (content, contradiction, summary)."""
+    content = dict(content)
+    contradiction = content.pop("contradiction", None) or None
+    summary = str(content.pop("summary", "") or fallback_summary or "")[:300]
+    return content, contradiction, summary
+
+
+def read_verdict(verdict: dict) -> tuple[list[str], list[str]]:
+    """The Reviewer's answer as (failed checks, required fixes); a fail must name a check."""
+    failed = [str(c) for c in verdict.get("failed_checks") or []]
+    fixes = [str(f) for f in verdict.get("required_fixes") or []]
+    if verdict.get("verdict") != "pass" and not failed:
+        failed = ["U5"]
+        fixes = fixes or ["The Reviewer failed this draft without naming a check; resubmit it."]
+    return failed, fixes
+
+
+UNREADABLE_DRAFT = {"status": "unreadable", "summary": "The team's reply was not readable",
+                    "body": "", "limitations": "The reply was not a JSON object."}
+UNREADABLE_VERDICT = {"verdict": "fail", "failed_checks": ["U5"],
+                      "required_fixes": ["The Reviewer could not read this draft; resubmit it unchanged."]}
+
+
 def latest_draft(conn, work_order_id: str) -> dict | None:
     return conn.execute(
         "select * from drafts where work_order_id = %s order by created_at desc, id desc limit 1",
@@ -527,46 +609,24 @@ def run_work_order(conn, company: dict, wo: dict) -> None:
         review(conn, company, wo, previous, failures)
         return
 
-    team, path = wo["team"], skill_path(wo["team"], wo["skill"])
+    team = wo["team"]
     upstream = []
     for dep in wo["depends_on"] or []:
         d = latest_draft(conn, dep)
         if d:
             upstream.append({"work_order": dep, "team": d["team"], "summary": d["summary"],
                              "body": d["content"].get("body")})
-    parts = [
-        f"You are the {label(team)} team at {company['name']}. Do the work order below.",
-        section(f"YOUR PLAYBOOK: {path}", store.read_skill(path)),
-        section("BUSINESS RULES", store.read_skill("business_rules")),
-        section("COMPANY BRAIN", store.read_brain(conn)),
-        section(f"WORK ORDER {wo['id']}", {
-            "summary": wo["summary"], "skill": wo["skill"], "tier": wo["tier"],
-            "inputs": wo["inputs"], "acceptance_criteria": wo["acceptance_criteria"],
-        }),
-    ]
-    if upstream:
-        parts.append(section("RESULTS OF EARLIER WORK ORDERS THIS ONE DEPENDS ON", upstream))
-    redo = ""
-    if previous and previous["founder_decision"] == "declined":
-        redo = " (revising after you declined it)"
-        parts.append(section("THE FOUNDER DECLINED YOUR LAST DRAFT. THEIR NOTE",
-                             previous["decision_note"] or "(no note)"))
-        parts.append(section("YOUR DECLINED DRAFT", previous["content"]))
-    elif previous and previous["verdict"] == "fail":
-        redo = f" (attempt {failures + 1}, fixing what the Reviewer found)"
-        parts.append(section("THE REVIEWER FAILED YOUR LAST DRAFT. REQUIRED FIXES", previous["required_fixes"]))
-        parts.append(section("YOUR FAILED DRAFT", previous["content"]))
-    parts.append(section("HOW TO ANSWER", DRAFT_CONTRACT))
+    message, redo = team_message(company["name"], wo, store.read_brain(conn), upstream=upstream,
+                                 previous=previous, failures=failures)
 
     activity = begin(conn, team, f"{label(team)} is drafting {wo['id']}: {wo['summary']}{redo}",
                      brief_id=wo["brief_id"], work_order_id=wo["id"])
     watch = Watch(conn, activity, team, brief_id=wo["brief_id"], work_order_id=wo["id"])
     try:
         try:
-            content, usage = ask_json(team, "\n".join(parts), watch)
+            content, usage = ask_json(team, message, watch)
         except ValueError:
-            content, usage = {"status": "unreadable", "summary": "The team's reply was not readable",
-                              "body": "", "limitations": "The reply was not a JSON object."}, {}
+            content, usage = dict(UNREADABLE_DRAFT), {}
     except Stopped:
         end(conn, activity, "stopped", "Stopped by you. Nothing was saved.")
         return
@@ -575,8 +635,7 @@ def run_work_order(conn, company: dict, wo: dict) -> None:
         conn.execute("update work_orders set status = 'pending' where id = %s and status = 'in_progress'", (wo["id"],))
         raise
 
-    contradiction = content.pop("contradiction", None) or None
-    summary = str(content.pop("summary", "") or wo["summary"] or "")[:300]
+    content, contradiction, summary = split_draft(content, wo["summary"])
     draft = conn.execute(
         """insert into drafts (work_order_id, team, skill, summary, content, tier, contradiction, retry_count)
            values (%s, %s, %s, %s, %s, %s, %s, %s) returning *""",
@@ -616,25 +675,13 @@ def review(conn, company: dict, wo: dict, draft: dict, failures: int) -> None:
     if failed:
         note(conn, activity, "Failed the runner's own checks before the Reviewer saw it.")
     else:
-        message = "\n".join([
-            f"You are the Reviewer for {company['name']}. Check the draft below. You have no tools.",
-            section("YOUR RUBRIC: review_rubric", store.read_skill("review_rubric")),
-            section("BUSINESS RULES", store.read_skill("business_rules")),
-            section("COMPANY BRAIN", store.read_brain(conn)),
-            section(f"WORK ORDER {wo['id']} ({wo['team']}, {wo['skill']}, tier {wo['tier']})", {
-                "summary": wo["summary"], "inputs": wo["inputs"],
-                "acceptance_criteria": wo["acceptance_criteria"]}),
-            section("DRAFT", {"tier": draft["tier"], "summary": draft["summary"],
-                              "content": draft["content"], "contradiction": draft["contradiction"]}),
-            section("HOW TO ANSWER", REVIEW_CONTRACT),
-        ])
+        message = review_message(company["name"], wo, store.read_brain(conn), draft)
         watch = Watch(conn, activity, "reviewer", brief_id=wo["brief_id"], work_order_id=wo["id"])
         try:
             try:
                 verdict, usage = ask_json("reviewer", message, watch)
             except ValueError:
-                verdict = {"verdict": "fail", "failed_checks": ["U5"],
-                           "required_fixes": ["The Reviewer could not read this draft; resubmit it unchanged."]}
+                verdict = dict(UNREADABLE_VERDICT)
         except Stopped:
             end(conn, activity, "stopped", "Stopped by you. The draft stays unreviewed.")
             return
@@ -643,11 +690,7 @@ def review(conn, company: dict, wo: dict, draft: dict, failures: int) -> None:
             conn.execute("update work_orders set status = 'pending' where id = %s and status = 'in_progress'",
                          (wo["id"],))
             raise
-        failed = [str(c) for c in verdict.get("failed_checks") or []]
-        fixes = [str(f) for f in verdict.get("required_fixes") or []]
-        if verdict.get("verdict") != "pass" and not failed:
-            failed = ["U5"]
-            fixes = fixes or ["The Reviewer failed this draft without naming a check; resubmit it."]
+        failed, fixes = read_verdict(verdict)
     outcome = "fail" if failed else "pass"
     conn.execute(
         "update drafts set verdict = %s, failed_checks = %s, required_fixes = %s where id = %s",

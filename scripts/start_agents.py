@@ -51,6 +51,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--fake", action="store_true", help="Also start the scripted fake model.")
     parser.add_argument("--company", help="Run work for this company only (slug).")
+    parser.add_argument("--no-runner", action="store_true",
+                        help="Start only the agents (for evals/run.py); no company work is picked up.")
     args = parser.parse_args()
 
     processes: dict[str, subprocess.Popen] = {}
@@ -63,10 +65,13 @@ def main() -> None:
             up = wait_until_up(team)
             print(f"{team:>12}: {'up' if up else 'NOT UP, see harness/logs/' + team + '.log'}"
                   f" on port {TEAMS[team]['port']}", flush=True)
-        processes["runner"] = start(
-            "runner", [PYTHON, "harness/runner.py"] + (["--company", args.company] if args.company else [])
-        )
-        print("runner: started.", flush=True)
+        if args.no_runner:
+            print("runner: not started (--no-runner). Run the evals: python evals/run.py", flush=True)
+        else:
+            processes["runner"] = start(
+                "runner", [PYTHON, "harness/runner.py"] + (["--company", args.company] if args.company else [])
+            )
+            print("runner: started.", flush=True)
         print(
             "\nThe ports above are for the runner to talk to the agents, not web pages: opening them in a\n"
             "browser shows 404, which is normal. Use the dashboard at http://127.0.0.1:3000 (Office, Activity).\n"

@@ -13,14 +13,10 @@ import urllib.error
 import urllib.request
 
 from _env import read_env
-from _profiles import PROVIDERS, choose_provider
+from _profiles import ENDPOINTS, PROVIDERS, choose_provider
 from configure_instances import ROOT_ENV
 
-BASES = {
-    "nvidia": ("https://integrate.api.nvidia.com/v1", "NVIDIA_API_KEY"),
-    "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai", "GEMINI_API_KEY"),
-    "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
-}
+BASES = {name: spec for name, spec in ENDPOINTS.items() if name != "fake"}
 STRONG = ("kimi", "glm", "deepseek", "qwen3", "gemini-3", "gemini-2.5", "claude", "minimax", "gpt-oss")
 
 

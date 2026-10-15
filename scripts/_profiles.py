@@ -100,6 +100,16 @@ def require_known_team(team: str) -> None:
         raise SystemExit(f"unknown team {team!r}, expected one of {list(TEAMS)}")
 
 
+# OpenAI-compatible endpoints a script can call directly (check_model.py,
+# the eval grader): provider -> (base url, key in .env).
+ENDPOINTS = {
+    "nvidia": ("https://integrate.api.nvidia.com/v1", "NVIDIA_API_KEY"),
+    "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai", "GEMINI_API_KEY"),
+    "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
+    "fake": ("http://127.0.0.1:8699/v1", None),
+}
+
+
 def model_for(role: str, env: dict) -> str:
     """The model a profile runs, as configure_instances.py sets it."""
     provider = choose_provider(env)
