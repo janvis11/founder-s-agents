@@ -6,10 +6,8 @@ import { rubricChecks } from "@/lib/rubric";
 import { teamLabel } from "@/lib/teams";
 import { Broken } from "@/components/Broken";
 import { Bounces } from "@/components/Bounces";
-import { DraftContent } from "@/components/DraftContent";
-import { ApproveActions, HeldActions } from "@/components/forms";
 
-export const metadata: Metadata = { title: "Approvals · Founders Corps" };
+export const metadata: Metadata = { title: "Approvals · Aloft" };
 
 export default async function Approvals() {
   const state = await attempt(() => Promise.all([listLatestDrafts(), listBouncesByWorkOrder()]));
@@ -71,9 +69,10 @@ export default async function Approvals() {
                 </div>
                 <div className="sheet-body">
                   <Bounces bounces={bounces[d.work_order_id] ?? []} checks={checks} showText={false} />
-                  <DraftContent content={d.content} />
+                  <Link href={`/drafts/${d.id}`} className="btn btn-amber">
+                    Read the draft and decide →
+                  </Link>
                 </div>
-                <ApproveActions draftId={d.id} team={teamLabel(d.team)} />
               </article>
             ))}
           </div>
@@ -109,15 +108,10 @@ export default async function Approvals() {
                   <h3 className="draft-title" id={`held-${d.id}`} style={{ marginBottom: 12 }}>
                     {typeof d.content.blocked_action === "string" ? d.content.blocked_action : d.summary}
                   </h3>
-                  <DraftContent content={d.content} />
+                  <Link href={`/drafts/${d.id}`} className="btn btn-quiet">
+                    Read the draft →
+                  </Link>
                 </div>
-                {typeof d.content.rule === "string" && (
-                  <div className="held-rule">
-                    <span className="label">Rule that holds it</span>
-                    <div>{d.content.rule}</div>
-                  </div>
-                )}
-                <HeldActions draftId={d.id} />
               </article>
             ))}
           </div>
@@ -135,7 +129,7 @@ export default async function Approvals() {
           <ul className="filed-list">
             {filed.map((d) => (
               <li key={d.id}>
-                <Link className="mono" href={`/work-orders/${d.work_order_id}`}>
+                <Link className="mono" href={`/drafts/${d.id}`}>
                   {d.work_order_id}
                 </Link>
                 <span>{teamLabel(d.team)}</span>
@@ -161,7 +155,7 @@ export default async function Approvals() {
           <ul className="filed-list">
             {decided.map((d) => (
               <li key={d.id}>
-                <Link className="mono" href={`/work-orders/${d.work_order_id}`}>
+                <Link className="mono" href={`/drafts/${d.id}`}>
                   {d.work_order_id}
                 </Link>
                 <span>

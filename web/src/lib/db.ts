@@ -75,6 +75,23 @@ export type Brief = {
   answered_at: Date | null;
 };
 
+/** One step an agent takes, written by harness/runner.py. */
+export type Activity = {
+  id: number;
+  brief_id: number | null;
+  work_order_id: string | null;
+  draft_id: number | null;
+  agent: string;
+  action: string;
+  model: string | null;
+  status: "running" | "done" | "failed" | "stopped";
+  detail: string | null;
+  started_at: Date;
+  finished_at: Date | null;
+};
+
+export type OfficeState = { paused: boolean; paused_at: Date | null };
+
 export type Decision = {
   decision: string;
   reasoning: string;
@@ -169,6 +186,11 @@ export function listDraftsFor(workOrderId: string): Promise<Draft[]> {
   );
 }
 
+export async function getDraft(id: number): Promise<Draft | null> {
+  const rows = await q<Draft>("select * from drafts where id = $1", [id]);
+  return rows[0] ?? null;
+}
+
 export function listAllDrafts(): Promise<Draft[]> {
   return q<Draft>("select * from drafts order by created_at asc, id asc");
 }
@@ -222,6 +244,27 @@ export function listReceiptAgents(): Promise<{ agent: string; count: number }[]>
 
 export function listBriefs(limit = 8): Promise<Brief[]> {
   return q<Brief>("select * from briefs order by created_at desc, id desc limit $1", [limit]);
+}
+
+export function listActivity(limit = 300): Promise<Activity[]> {
+  return q<Activity>("select * from activity order by started_at desc, id desc limit $1", [limit]);
+}
+
+export function listRunningActivity(): Promise<Activity[]> {
+  return q<Activity>("select * from activity where status = 'running' order by started_at asc, id asc");
+}
+
+/** The latest trouble the runner wrote down, so the live bar can say what went wrong. */
+export async function lastFailure(): Promise<Activity | null> {
+  const rows = await q<Activity>(
+    "select * from activity where status = 'failed' and started_at > now() - interval '30 minutes' order by started_at desc limit 1",
+  );
+  return rows[0] ?? null;
+}
+
+export async function getOfficeState(): Promise<OfficeState> {
+  const rows = await q<OfficeState>("select paused, paused_at from office_state where id = 1");
+  return rows[0] ?? { paused: false, paused_at: null };
 }
 
 export async function getCompanyBrain(): Promise<{ data: CompanyBrain; updated_at: Date } | null> {

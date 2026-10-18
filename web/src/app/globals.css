@@ -3060,3 +3060,285 @@ select.input option {
     padding: 8px 11px;
   }
 }
+
+/* Live bar and Activity: what the agents are doing right now. ------------ */
+.live {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-1);
+  padding: 12px 16px;
+  display: grid;
+  gap: 10px;
+}
+.live-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+.live-state,
+.live-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--dim);
+}
+.live-state {
+  font-weight: 600;
+  color: var(--blocked);
+}
+.live-state[data-on="true"] {
+  color: #16a34a;
+}
+.live-state .live-dot {
+  background: currentColor;
+}
+.live-agents {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.live-agent[data-up="false"] {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--faint);
+  flex: none;
+  display: inline-block;
+}
+.live-pulse {
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-pulse {
+    animation: none;
+  }
+}
+.live-actions {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.live-now {
+  display: grid;
+  gap: 8px;
+  font-size: 14.5px;
+}
+.live-now p {
+  margin: 0;
+}
+.live-task {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: start;
+}
+.live-task .live-dot {
+  margin-top: 7px;
+}
+.live-detail {
+  color: #b45309;
+  font-size: 13.5px;
+}
+.live-hint,
+.live-idle {
+  color: var(--dim);
+  font-size: 13.5px;
+}
+.live-off {
+  color: var(--blocked);
+}
+.live-off code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.live-paused {
+  background: #fff0d4;
+  border: 1px solid rgba(232, 147, 12, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 14px;
+}
+.stop-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.stop-btn:hover {
+  background: var(--bg-2);
+}
+.stop-btn[data-tone="stop"] {
+  border-color: rgba(225, 29, 72, 0.45);
+  color: var(--blocked);
+}
+.stop-btn[data-tone="stop"]:hover {
+  background: rgba(225, 29, 72, 0.08);
+}
+.stop-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.act-state {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--dim);
+  white-space: nowrap;
+}
+.act-state[data-state="running"],
+.act-state[data-state="working"],
+.act-state[data-state="sent"] {
+  background: #dfe3ff;
+  color: #2a2db8;
+}
+.act-state[data-state="done"],
+.act-state[data-state="answered"] {
+  background: #d8f5e1;
+  color: #166534;
+}
+.act-state[data-state="failed"],
+.act-state[data-state="broken"] {
+  background: #ffe4e9;
+  color: #be123c;
+}
+.act-state[data-state="stopped"] {
+  background: #fff0d4;
+  color: #92400e;
+}
+.act-answer {
+  border-left: 3px solid #3a3dff;
+  padding: 2px 0 2px 12px;
+  margin-bottom: 16px;
+}
+.act-answer p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+.act-orders {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: grid;
+  gap: 6px;
+}
+.act-orders li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.act-order-sum {
+  flex: 1 1 220px;
+}
+.act-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-left: 1px solid var(--line-strong);
+  margin-left: 6px;
+}
+.act-steps li {
+  display: grid;
+  grid-template-columns: 74px auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 8px 0 8px 12px;
+  font-size: 14px;
+}
+.act-steps li .live-dot {
+  margin-top: 6px;
+}
+.act-steps li[data-state="failed"] {
+  background: linear-gradient(90deg, rgba(225, 29, 72, 0.05), transparent 60%);
+}
+.act-time {
+  font-size: 12px;
+  padding-top: 2px;
+}
+.act-detail {
+  color: var(--dim);
+  font-size: 13.5px;
+  margin-top: 2px;
+}
+.act-steps li[data-state="failed"] .act-detail {
+  color: #be123c;
+}
+.act-link {
+  font-size: 13px;
+}
+@media (max-width: 640px) {
+  .act-steps li {
+    grid-template-columns: auto 1fr;
+  }
+  .act-time {
+    grid-column: 1 / -1;
+  }
+  .live-actions {
+    margin-left: 0;
+  }
+}
+
+/* On the office page the live bar sits on the right, under the stat tiles. */
+.office-side {
+  display: grid;
+  gap: 8px;
+  flex: 0 1 480px;
+  align-content: start;
+}
+.office-side .live {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 10px 12px;
+  gap: 8px;
+}
+.office-side .live-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.office-side .live-agents {
+  gap: 4px 10px;
+}
+.office-side .live-actions {
+  margin-left: 0;
+}
+.office-side .live-now {
+  font-size: 13.5px;
+}
+.office-side .live-task {
+  grid-template-columns: auto 1fr;
+}
+.office-side .live-task form {
+  grid-column: 2;
+}
+@media (min-width: 1001px) and (min-aspect-ratio: 5/4) {
+  .office-side {
+    flex: 0 1 min(24vw, 320px);
+  }
+}

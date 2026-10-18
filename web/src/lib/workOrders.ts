@@ -4,6 +4,7 @@ import { teamLabel } from "./teams";
 /** Who holds a work order right now, in the founder's terms. */
 export function holder(wo: WorkOrder, all: WorkOrder[] = []): { text: string; onYou: boolean } {
   const team = teamLabel(wo.team);
+  if (wo.status === "stopped") return { text: "Stopped by you", onYou: false };
   if (wo.status === "escalated") return { text: "Escalated to you after two bounces", onYou: true };
   if (wo.latest_decision === "approved") return { text: "Approved by you", onYou: false };
   if (wo.latest_decision === "declined") return { text: `Declined, back with ${team}`, onYou: false };

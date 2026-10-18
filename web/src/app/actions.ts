@@ -278,6 +278,48 @@ export async function sendBrief(_prev: FormState, form: FormData): Promise<FormS
   return { ok: true, message: `Brief ${brief.id} sent. The Orchestrator picks it up next.` };
 }
 
+// Stopping and pausing ------------------------------------------------------
+// The runner checks every few seconds while an agent works; a stopped step is
+// dropped and its answer discarded. Nothing already filed is undone.
+
+export async function stopBrief(form: FormData): Promise<void> {
+  await requireFounder();
+  const id = Number(form.get("brief_id"));
+  const rows = (await query(
+    "update briefs set status = 'stopped' where id = $1 and status in ('sent', 'working') returning id",
+    [id],
+  )) as { id: number }[];
+  if (!rows.length) return;
+  const stopped = (await query(
+    "update work_orders set status = 'stopped', updated_at = now() where brief_id = $1 and status in ('pending', 'in_progress', 'bounced') returning id",
+    [id],
+  )) as { id: string }[];
+  await receipt("brief", `Stopped brief ${id}`, { inputs: { brief_id: id }, output: { work_orders: stopped.map((r) => r.id) } });
+  refreshAll();
+}
+
+export async function stopWorkOrder(form: FormData): Promise<void> {
+  await requireFounder();
+  const id = text(form, "work_order_id");
+  const rows = (await query(
+    "update work_orders set status = 'stopped', updated_at = now() where id = $1 and status in ('pending', 'in_progress', 'bounced') returning id",
+    [id],
+  )) as { id: string }[];
+  if (!rows.length) return;
+  await receipt("work_order", `Stopped work order ${id}`, { workOrderId: id });
+  refreshAll();
+}
+
+export async function setPaused(form: FormData): Promise<void> {
+  await requireFounder();
+  const paused = form.get("paused") === "true";
+  await query("update office_state set paused = $1, paused_at = case when $1 then now() else null end where id = 1", [
+    paused,
+  ]);
+  await receipt("office", paused ? "Paused the office" : "Resumed the office");
+  refreshAll();
+}
+
 // Approvals -----------------------------------------------------------------
 
 async function loadDraft(id: number): Promise<Draft | null> {

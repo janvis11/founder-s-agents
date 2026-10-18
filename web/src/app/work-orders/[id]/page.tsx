@@ -4,16 +4,16 @@ import { attempt, getWorkOrder, listDraftsFor, listReceipts, listWorkOrders } fr
 import { age, stamp } from "@/lib/format";
 import { rubricChecks } from "@/lib/rubric";
 import { INSTANCE_PLAYBOOKS, TIER_MEANING, teamLabel } from "@/lib/teams";
-import { holder } from "@/lib/workOrders";
+import { holder, isOpen } from "@/lib/workOrders";
 import { Broken } from "@/components/Broken";
 import { Bounces } from "@/components/Bounces";
-import { DraftContent } from "@/components/DraftContent";
+import { StopWorkOrder } from "@/components/StopControls";
 import { Dispute } from "@/components/Dispute";
 import { Wire } from "@/components/Wire";
 
 export async function generateMetadata(props: PageProps<"/work-orders/[id]">) {
   const { id } = await props.params;
-  return { title: `${id} · Founders Corps` };
+  return { title: `${id} · Aloft` };
 }
 
 function playbookSlug(team: string, skill: string) {
@@ -51,8 +51,11 @@ export default async function WorkOrderPage(props: PageProps<"/work-orders/[id]"
             <span className="mono" style={{ fontWeight: 600 }}>
               Work order {wo.id}
             </span>
-            <span className="mono muted" style={{ fontSize: 12 }}>
-              issued {stamp(wo.created_at)} · {age(wo.created_at)} ago
+            <span style={{ display: "inline-flex", gap: 12, alignItems: "center" }}>
+              <span className="mono muted" style={{ fontSize: 12 }}>
+                issued {stamp(wo.created_at)} · {age(wo.created_at)} ago
+              </span>
+              {isOpen(wo) && wo.status !== "escalated" && <StopWorkOrder workOrderId={wo.id} />}
             </span>
           </div>
           <div className="sheet-body">
@@ -137,7 +140,7 @@ export default async function WorkOrderPage(props: PageProps<"/work-orders/[id]"
           {drafts.length === 0 && (
             <p className="empty">{teamLabel(wo.team)} has not returned a draft yet.</p>
           )}
-          <Bounces bounces={bounces} checks={checks} />
+          <Bounces bounces={bounces} checks={checks} showText={false} />
           {current && (
             <article className="sheet" data-tier={current.tier === "auto" ? undefined : current.tier}>
               <div className="sheet-head">
@@ -149,14 +152,11 @@ export default async function WorkOrderPage(props: PageProps<"/work-orders/[id]"
                   </div>
                   <h3 className="draft-title">{current.summary ?? "Current draft"}</h3>
                 </div>
-                {current.tier === "approve" && current.verdict === "pass" && !current.founder_decision && (
-                  <Link href="/approvals" className="btn">
-                    Review in approvals
-                  </Link>
-                )}
-              </div>
-              <div className="sheet-body">
-                <DraftContent content={current.content} />
+                <Link href={`/drafts/${current.id}`} className="btn">
+                  {current.tier === "approve" && current.verdict === "pass" && !current.founder_decision
+                    ? "Read and decide →"
+                    : "Read the draft →"}
+                </Link>
               </div>
             </article>
           )}

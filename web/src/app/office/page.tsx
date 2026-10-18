@@ -17,6 +17,8 @@ import { Manifest } from "@/components/Manifest";
 import { Wire } from "@/components/Wire";
 import { BriefForm } from "@/components/forms";
 import { Office } from "@/components/office/Office";
+import { LiveBar } from "@/components/LiveBar";
+import { StopBrief } from "@/components/StopControls";
 
 function greeting(now = new Date()) {
   const h = now.getHours();
@@ -49,6 +51,10 @@ export default async function Home() {
   const { waiting, held } = office.zones.founder;
   const inFlight = office.zones.orchestrator.inFlight;
 
+  const working =
+    briefs.some((b) => b.status === "sent" || b.status === "working") ||
+    orders.some((o) => o.status === "pending" || o.status === "in_progress" || o.status === "bounced");
+
   return (
     <div className="stack">
       <Office {...office}>
@@ -77,6 +83,7 @@ export default async function Home() {
             </p>
           )}
         </div>
+        <div className="office-side">
         <div className="stat-row">
           <Link href="/approvals" className="stat" data-tone={waiting ? "approve" : undefined}>
             <b>{waiting}</b>
@@ -94,6 +101,8 @@ export default async function Home() {
             <b>{runway ?? "—"}</b>
             <span>runway mo</span>
           </Link>
+        </div>
+        <LiveBar alsoActive={working} />
         </div>
       </Office>
 
@@ -117,7 +126,12 @@ export default async function Home() {
                     <span className="brief-body">“{b.body}”</span>
                     {b.status === "answered" && b.response && <span className="brief-answer">{b.response}</span>}
                     {b.status === "sent" && <span className="brief-answer">Waiting for the Orchestrator.</span>}
+                    {b.status === "working" && (
+                      <span className="brief-answer">{b.response ?? "The teams are on it."}</span>
+                    )}
                     {b.status === "broken" && <span className="broken">Broken: {b.error}</span>}
+                    {b.status === "stopped" && <span className="brief-answer">Stopped by you.</span>}
+                    {(b.status === "sent" || b.status === "working") && <StopBrief briefId={b.id} />}
                   </li>
                 ))}
               </ol>
@@ -126,9 +140,6 @@ export default async function Home() {
 
           <section aria-labelledby="work-orders">
             <h2 className="section-title" id="work-orders">
-                    {b.status === "working" && (
-                      <span className="brief-answer">{b.response ?? "The teams are on it."}</span>
-                    )}
               Work orders <span className="count">{orders.length}</span>
             </h2>
             {orders.length ? (
