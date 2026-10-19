@@ -5,10 +5,12 @@ for the architecture, this file for how to work here.
 
 ## What this repo is
 
-A self-hosted multi-agent platform. Five Hermes instances (Orchestrator,
-Growth, Technical, Finance, Design), a Next.js dashboard, Postgres for state,
-and a `skills/` folder of markdown playbooks that define how each agent
-decides.
+Everything a founder needs in one place, hosted or self-hosted (D10). Six
+Hermes instances (Orchestrator, Growth, Technical, Finance, Design,
+Reviewer), the runner that moves work between them (`harness/runner.py`), a
+Next.js dashboard, Postgres for state, and a `skills/` folder of markdown
+playbooks that define how each agent decides. All four teams stay; they
+deepen one at a time.
 
 The skills are the product. The code is the harness around them.
 
@@ -17,7 +19,7 @@ The skills are the product. The code is the harness around them.
 ```
 AGENTS.md              architecture, company_brain schema, approval tiers
 PRODUCT.md             what we are building and why
-ROADMAP.md             build order — follow it, do not skip ahead
+ROADMAP.md             build order; follow it, do not skip ahead
 skills/                agent playbooks, synced into each Hermes home
   business_rules/      global constraints, injected into every work order
   review_rubric/       reviewer checklist
@@ -30,7 +32,8 @@ meta/                  build-time guidance for this repo itself, not synced
   dashboard_design/    design direction for founder-agents' own Next.js UI
 web/                   Next.js dashboard
 evals/                 fixture companies with planted problems
-scripts/               skill sync, health checks
+harness/               runner, database helper, fake model, MCP server
+scripts/               profiles and model setup, skill sync, start_agents
 ```
 
 ## Conventions
@@ -72,7 +75,7 @@ Reviewer. Do not weaken them for convenience during development.
 
 ## When making changes
 
-- Changing a skill? Run `evals/` before and after. Record the delta.
+- Changing a skill? Run `python evals/run.py --team <team> --label "<what changed>"` before and after; the delta lands in `evals/baselines.md`.
 - Adding a team? It needs its own Hermes instance, its own skill folder, and
   its own section in `review_rubric`. Not a folder inside an existing team.
 - Adding a tool with side effects? Default it to `blocked` and justify any
@@ -82,7 +85,7 @@ Reviewer. Do not weaken them for convenience during development.
 
 - Do not build an HR team. Out of scope by decision, not by omission.
 - Do not add growth prediction or forecasting from usage data. Diagnosis and
-  scenario maths only — see `PRODUCT.md`.
+  scenario maths only; see `PRODUCT.md`.
 - Do not let the Reviewer use tools or form opinions. It is a checklist.
 - Do not let the Orchestrator do specialist work, even when it would be
   faster than dispatching.

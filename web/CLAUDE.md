@@ -13,7 +13,18 @@ is plain CSS in `src/app/globals.css`.
   into one of your companies, `/office` office home, `/approvals`, `/work-orders/[id]`,
   `/playbooks` and `/playbooks/[...slug]` (read and amend), `/ledger`
   (receipts), `/brain`, `/setup` (company essentials), `/export` (JSON
-  backup route). `actions.ts` holds every server action.
+  backup route), `/activity` (briefs as step timelines, Stop), `/drafts/[id]`
+  (one draft in full, its review and attempts, Approve, Decline, Stop).
+  `actions.ts` holds every server action, including `stopBrief`,
+  `stopWorkOrder` and `setPaused`. Sending a brief only saves it; the
+  runner does the rest.
+- `src/components/LiveBar.tsx` the live status (runner, agents, what runs
+  now, Pause), on the office under the stat tiles and on Activity;
+  `StopControls.tsx` the stop and pause buttons; `LiveRefresh.tsx`
+  re-renders every few seconds while work is in flight.
+- `src/components/keycard/` sign in and sign up: `Keycard.tsx` (the card
+  and reader), `KeycardSignIn.tsx`, `KeycardSignUp.tsx`, `SignaturePad.tsx`,
+  `IssueKeycard.tsx`, `useSwipe.ts`. `src/components/Logo.tsx` the mark.
 - `src/components/office/` the isometric office: `iso.ts` projection
   helpers, `zones.ts` room colours (shared by server and client),
   `Office.tsx` the SVG scene, room labels and the slide-in room drawer.
@@ -24,8 +35,9 @@ is plain CSS in `src/app/globals.css`.
   `sql.ts` one database per company (`query` uses `currentCompany()`, which
   checks membership; `queryFor(id)` an explicit one); `db.ts` typed
   queries; `lock.ts` old passcodes, used only to claim; `office.ts` maps work orders onto rooms,
-  `playbooks.ts` reads and writes `../skills`, `gateway.ts` calls the
-  Orchestrator, `teams.ts`, `workOrders.ts`, `format.ts`, `diff.ts`,
+  `playbooks.ts` reads and writes `../skills`, `agents.ts` checks the six
+  gateways' `/health` and reads the runner's heartbeat file
+  (`../harness/logs/runner.heartbeat`), `teams.ts`, `workOrders.ts`, `format.ts`, `diff.ts`,
   `markdown.ts`, `rubric.ts`.
 - `src/proxy.ts` (Next 16 name for middleware): `/` and `/signup` are
   open; `/new`, `/claim`, `/c/*` need a valid signed session; everything
@@ -83,7 +95,8 @@ is plain CSS in `src/app/globals.css`.
 
 ## Design state
 
-White theme, large edge-to-edge office, every office object coloured,
+White theme, ink structure (no blue chrome), logo is an isometric block,
+office fits one screen on landscape displays, large edge-to-edge office, every office object coloured,
 each room its own colour (see `zones.ts`), amber for what needs the founder,
 rose for blocked. `DESIGN.md` describes an earlier direction; the code is
 the source of truth. Janvi rejects: plain or boring layouts, pure black and

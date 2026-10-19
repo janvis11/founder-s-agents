@@ -6,15 +6,18 @@
   bottom in the same style and never write a destructive migration.
 - One database per company (D8), all with this same schema. Tables:
   `company_brain` (exactly one row, id 1), `briefs`, `work_orders`,
-  `drafts`, `agent_run_logs` (receipts), `playbook_amendments`.
+  `drafts`, `agent_run_logs` (receipts), `playbook_amendments`, `activity`
+  (one row per agent step, written by `harness/runner.py`), `office_state`
+  (one row: paused).
 - Teams allowed: growth, technical, finance, design. Work order status:
-  pending, in_progress, done, bounced, escalated. Tiers: auto, approve,
-  blocked.
+  pending, in_progress, done, bounced, escalated, stopped. Brief status:
+  sent, working, answered, broken, stopped. Tiers: auto, approve, blocked.
 - Decisions in `company_brain.data.decisions` must carry `reasoning` and
   `revisit_if`; the dashboard and `harness/mcp_server.py` both reject
-  decisions without them.
+  decisions without them (`harness/store.py` also skips an exact
+  duplicate).
 - The accounts database is separate: `web/.data/install/postgres`
-  (accounts, sessions, memberships), schema inside `web/src/lib/accounts.ts`,
+  (accounts with drawn signature, sessions, memberships, keycards), schema inside `web/src/lib/accounts.ts`,
   opened only by the dashboard process and never served on a port.
 - Where company data lives: `web/.data/companies/<id>/postgres`, one folder
   per company, listed with its port in `web/.data/companies.json`. The

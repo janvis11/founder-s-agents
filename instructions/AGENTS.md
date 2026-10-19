@@ -1,8 +1,8 @@
-# Founder Agents — architecture
+# Founder Agents: architecture
 
-A self-hosted platform that gives a solo founder four working teams, run as
-separate Hermes agent instances. The founder owns the infrastructure and the
-skills. Nothing is a black box.
+Everything a founder needs in one place: four working teams, run as
+separate Hermes agent instances, sharing one company. Hosted or self-hosted
+(D10). The founder owns the skills. Nothing is a black box.
 
 ## Teams
 
@@ -12,9 +12,9 @@ skills. Nothing is a black box.
 | Growth | Sales and marketing as one team. | ICP, positioning, outreach, content |
 | Technical | Product and engineering. | Scope, architecture notes, bug triage |
 | Finance | Money. | Runway, burn, pricing, unit economics |
-| Design | Product design for the founder's own product — software interface or physical object — plus brand and visual identity. | Design direction, design critique, brand/visual identity system |
+| Design | Product design for the founder's own product (software interface or physical object) plus brand and visual identity. | Design direction, design critique, brand/visual identity system |
 
-Five Hermes processes. Separate instances, not one agent with many skills —
+Five Hermes processes. Separate instances, not one agent with many skills:
 skill folders stay coherent, and one team can be restarted or upgraded without
 touching the others.
 
@@ -39,7 +39,7 @@ discretion. It only checks whether the Draft satisfies stated rules.
 ## company_brain
 
 One document, owned by the Orchestrator, read by every specialist before it
-acts. This is what keeps three teams from contradicting each other.
+acts. This is what keeps four teams from contradicting each other.
 
 ```yaml
 company:
@@ -62,7 +62,7 @@ constraints:
   founder_hours_per_week: number
 decisions:
   - decision: string
-    reasoning: string       # required — the why, not just the what
+    reasoning: string       # required: the why, not just the what
     date: date
     revisit_if: string      # the condition that would reopen this
 priorities:
@@ -76,10 +76,10 @@ decided without why is how a founder relitigates the same argument in month six.
 
 Every WorkOrder carries a tier. The tier decides what happens after review.
 
-- **auto** — internal research, analysis, drafts saved to state. No approval.
-- **approve** — anything the outside world sees. Outreach, published content,
+- **auto**: internal research, analysis, drafts saved to state. No approval.
+- **approve**: anything the outside world sees. Outreach, published content,
   customer-facing copy. Batched for founder approval.
-- **blocked** — money movement, contract signature, legal filing, production
+- **blocked**: money movement, contract signature, legal filing, production
   deploy, anything hiring-related. Agent may draft and recommend. Agent may
   never execute. Routes to the founder with no approve button.
 
@@ -88,11 +88,23 @@ checked by the Reviewer on every single Draft.
 
 ## Stack
 
-- Hermes Agent — five instances, gateway API enabled, one port each
-- Next.js — founder dashboard: brief input, approval inbox, skill browser
-- Postgres or Supabase — `company_brain`, `work_orders`, `drafts`, `receipts`,
+- Hermes Agent: six instances (the Reviewer is its own, with no tools),
+  gateway API enabled, one port each, memory off.
+- `harness/runner.py`: moves the work between them (plan, draft, review,
+  answer), writes every result to the company's database, records each
+  step in `activity`, and honours the founder's Stop and Pause. Agents
+  never touch a database. Model
+  provider today is AWS Bedrock; any model key (Anthropic API, OpenRouter,
+  Bedrock, local) is ROADMAP phase 1. Cheap model for routing and review,
+  strong model for team work.
+- Next.js: the founder dashboard (office, approvals, playbooks, receipts,
+  company brain)
+- Postgres, one database per company (embedded PGlite today, see
+  `db/CLAUDE.md`): `company_brain`, `work_orders`, `drafts`, `receipts`,
   `agent_run_logs`
-- `scripts/sync-skills` — copies `skills/` into each Hermes home on boot
+- MCP connectors to outside tools (ROADMAP phase 4); side effects default to
+  `blocked`
+- `scripts/sync-skills`: copies `skills/` into each Hermes home on boot
 
 ## Eval harness
 
