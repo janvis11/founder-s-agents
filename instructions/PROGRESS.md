@@ -113,7 +113,8 @@ statements. Last updated 2026-10-07.
   of steps with durations, errors in plain words, Stop buttons) and
   `/drafts/<id>` (one draft in full with its review, every attempt, and
   Approve, Decline or Stop; Approvals and work orders link to it instead of
-  showing drafts inline).
+  showing drafts inline). Approvals also lists drafts the Reviewer is
+  checking now (In review), refreshing itself until they land.
 - Live bar (`LiveBar.tsx`) on the office, under the stat tiles, and on
   Activity: runner on or off (heartbeat file), which agents answer on their
   port, what is running now with timer and model, the model's latest trouble,

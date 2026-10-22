@@ -10,7 +10,8 @@ is plain CSS in `src/app/globals.css`.
 - `src/app/` pages: `/` front desk (signed out) or your offices (signed
   in), `/signup` build your office, `/new` open another office, `/claim`
   claim an office from before accounts, `/c/[id]` route handler that steps
-  into one of your companies, `/office` office home, `/approvals`, `/work-orders/[id]`,
+  into one of your companies, `/office` office home, `/approvals` (in
+  review, waiting on you, held, filed, decided), `/work-orders/[id]`,
   `/playbooks` and `/playbooks/[...slug]` (read and amend), `/ledger`
   (receipts), `/brain`, `/setup` (company essentials), `/export` (JSON
   backup route), `/activity` (briefs as step timelines, Stop), `/drafts/[id]`

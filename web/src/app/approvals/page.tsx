@@ -1,18 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { attempt, listBouncesByWorkOrder, listLatestDrafts, type Draft } from "@/lib/db";
+import { attempt, listBouncesByWorkOrder, listLatestDrafts, listWorkOrders, type Draft } from "@/lib/db";
 import { age, stamp } from "@/lib/format";
 import { rubricChecks } from "@/lib/rubric";
 import { teamLabel } from "@/lib/teams";
 import { Broken } from "@/components/Broken";
 import { Bounces } from "@/components/Bounces";
+import { LiveRefresh } from "@/components/LiveRefresh";
 
 export const metadata: Metadata = { title: "Approvals · Aloft" };
 
 export default async function Approvals() {
-  const state = await attempt(() => Promise.all([listLatestDrafts(), listBouncesByWorkOrder()]));
+  const state = await attempt(() => Promise.all([listLatestDrafts(), listBouncesByWorkOrder(), listWorkOrders()]));
   if (!state.ok) return <Broken reason={state.reason} />;
-  const [drafts, bounces] = state.value;
+  const [drafts, bounces, orders] = state.value;
   const checks = await rubricChecks();
 
   const byNewest = (a: Draft, b: Draft) => +new Date(b.created_at) - +new Date(a.created_at);
@@ -20,6 +21,12 @@ export default async function Approvals() {
   const held = drafts.filter((d) => d.tier === "blocked" && !d.decided_at).sort(byNewest);
   const filed = drafts.filter((d) => d.tier === "auto" && d.verdict === "pass").sort(byNewest);
   const decided = drafts.filter((d) => d.founder_decision || (d.tier === "blocked" && d.decided_at)).sort(byNewest);
+  // Drafted, not yet checked: the Reviewer has them now. A stopped work order's
+  // unreviewed draft is not in review; nobody will check it.
+  const open = new Set(orders.filter((o) => ["pending", "in_progress", "bounced"].includes(o.status)).map((o) => o.id));
+  const inReview = drafts
+    .filter((d) => d.verdict === null && !d.founder_decision && open.has(d.work_order_id))
+    .sort(byNewest);
 
   return (
     <>
@@ -29,11 +36,39 @@ export default async function Approvals() {
             Approvals <span className="accent">— your signature, or nothing leaves.</span>
           </h1>
           <p>
-            Drafts that passed review. Canary copies need your signature before they leave. Pink copies are held: no team
-            can do what they describe, and neither can this screen.
+            Drafts that passed review, and those the Reviewer is checking now. Canary copies need your signature before
+            they leave. Pink copies are held: no team can do what they describe, and neither can this screen.
           </p>
         </div>
       </div>
+
+      <LiveRefresh active={inReview.length > 0} />
+      {inReview.length > 0 && (
+        <section aria-labelledby="in-review" style={{ marginBottom: 32 }}>
+          <h2 className="section-title" id="in-review">
+            In review <span className="count">{inReview.length}</span>
+          </h2>
+          <p className="muted" style={{ margin: "-6px 0 12px", fontSize: 14 }}>
+            Drafted and with the Reviewer now. Each one lands below once it passes, or goes back to its team.
+          </p>
+          <ul className="filed-list">
+            {inReview.map((d) => (
+              <li key={d.id}>
+                <Link className="mono" href={`/drafts/${d.id}`}>
+                  {d.work_order_id}
+                </Link>
+                <span>{teamLabel(d.team)}</span>
+                <span className="serif" style={{ fontSize: 16 }}>
+                  {d.summary ?? d.skill}
+                </span>
+                <span className="mono muted" style={{ fontSize: 12 }}>
+                  {d.retry_count ? `attempt ${d.retry_count + 1} · ` : ""}drafted {age(d.created_at)} ago
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="approvals">
         <section aria-labelledby="waiting">
